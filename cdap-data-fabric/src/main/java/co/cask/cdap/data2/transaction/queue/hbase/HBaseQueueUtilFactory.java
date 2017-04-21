@@ -16,12 +16,18 @@
 
 package co.cask.cdap.data2.transaction.queue.hbase;
 
+import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.data2.util.hbase.HBaseVersionSpecificFactory;
 
 /**
  * Factory for HBase version-specific instances of {@link HBaseQueueUtil}.
  */
 public class HBaseQueueUtilFactory extends HBaseVersionSpecificFactory<HBaseQueueUtil> {
+  private final CConfiguration cConf;
+
+  public HBaseQueueUtilFactory(CConfiguration cConf) {
+    this.cConf = cConf;
+  }
   @Override
   protected String getHBase96Classname() {
     return "co.cask.cdap.data2.transaction.queue.hbase.HBase96QueueUtil";
@@ -55,5 +61,10 @@ public class HBaseQueueUtilFactory extends HBaseVersionSpecificFactory<HBaseQueu
   @Override
   protected String getHBase10CHD550ClassName() {
     return "co.cask.cdap.data2.transaction.queue.hbase.HBase10CDH550QueueUtil";
+  }
+
+  @Override
+  protected CConfiguration getCConfiguration() {
+    return cConf;
   }
 }

@@ -566,7 +566,7 @@ final class SparkRuntimeService extends AbstractExecutionThreadService {
 
     List<Class<?>> classes = new ArrayList<>();
     classes.add(SparkMainWrapper.class);
-    classes.add(HBaseTableUtilFactory.getHBaseTableUtilClass());
+    classes.add(HBaseTableUtilFactory.getHBaseTableUtilClass(cConf));
 
     // Add HBase DDL executor dependency
     Class<? extends HBaseDDLExecutor> ddlExecutorClass =

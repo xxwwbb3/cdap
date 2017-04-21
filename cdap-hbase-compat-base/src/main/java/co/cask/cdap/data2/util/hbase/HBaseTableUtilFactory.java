@@ -47,10 +47,10 @@ public class HBaseTableUtilFactory extends HBaseVersionSpecificFactory<HBaseTabl
     return hBaseTableUtil;
   }
 
-  public static Class<? extends HBaseTableUtil> getHBaseTableUtilClass() {
-    // Since we only need the class name, it is fine to have a null CConfiguration and null namespaceQueryAdmin,
+  public static Class<? extends HBaseTableUtil> getHBaseTableUtilClass(CConfiguration cConf) {
+    // Since we only need the class name, it is fine to have a null namespaceQueryAdmin,
     // since we do not use the tableUtil instance
-    return new HBaseTableUtilFactory(null).get().getClass();
+    return new HBaseTableUtilFactory(cConf).get().getClass();
   }
 
   @Override
@@ -86,5 +86,10 @@ public class HBaseTableUtilFactory extends HBaseVersionSpecificFactory<HBaseTabl
   @Override
   protected String getHBase12CHD570ClassName() {
     return "co.cask.cdap.data2.util.hbase.HBase12CDH570TableUtil";
+  }
+
+  @Override
+  protected CConfiguration getCConfiguration() {
+    return cConf;
   }
 }

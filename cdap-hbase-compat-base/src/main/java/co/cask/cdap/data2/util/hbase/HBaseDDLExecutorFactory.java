@@ -29,10 +29,12 @@ import java.util.Map;
  */
 public class HBaseDDLExecutorFactory extends HBaseVersionSpecificFactory<HBaseDDLExecutor> {
 
+  private final CConfiguration cConf;
   private final HBaseDDLExecutorLoader hBaseDDLExecutorLoader;
   private final HBaseDDLExecutorContext context;
 
   public HBaseDDLExecutorFactory(CConfiguration cConf, Configuration hConf) {
+    this.cConf = cConf;
     this.hBaseDDLExecutorLoader = new HBaseDDLExecutorLoader(cConf.get(Constants.HBaseDDLExecutor.EXTENSIONS_DIR, ""));
     this.context = new BasicHBaseDDLExecutorContext(cConf, hConf);
   }
@@ -87,5 +89,10 @@ public class HBaseDDLExecutorFactory extends HBaseVersionSpecificFactory<HBaseDD
   @Override
   protected String getHBase12CHD570ClassName() {
     return "co.cask.cdap.data2.util.hbase.DefaultHBase12CDH570DDLExecutor";
+  }
+
+  @Override
+  protected CConfiguration getCConfiguration() {
+    return cConf;
   }
 }

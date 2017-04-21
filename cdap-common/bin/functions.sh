@@ -402,6 +402,8 @@ cdap_set_classpath() {
 #
 cdap_set_hbase() {
   local readonly __compat __class=co.cask.cdap.data2.util.hbase.HBaseVersion
+  local readonly __latest_hbase_compat_cdh=hbase-compat-1.2-cdh5.7.0 # must be updated if a new CDH HBase version is added
+  local readonly __latest_hbase_compat=hbase-compat-1.1 # must be updated if a new HBase version is added
   HBASE_VERSION=${HBASE_VERSION:-$("${JAVA}" -cp ${CLASSPATH} ${__class} 2>/dev/null)}
   case ${HBASE_VERSION} in
     0.96*) __compat="${CDAP_HOME}"/hbase-compat-0.96/lib/* ;;
@@ -413,7 +415,22 @@ cdap_set_hbase() {
     1.2-cdh*) __compat="${CDAP_HOME}"/hbase-compat-1.2-cdh5.7.0/lib/* ;; # 5.7 and 5.8 are compatible
     1.2*) __compat="${CDAP_HOME}"/hbase-compat-1.1/lib/* ;; # 1.1 and 1.2 are compatible
     "") die "Unable to determine HBase version! Aborting." ;;
-    *) die "Unknown/Unsupported HBase version found: ${HBASE_VERSION}" ;;
+    *-cdh*)
+      if [[ $(cdap_get_conf "hbase.version.resolution.strategy" "${CDAP_CONF}"/cdap-site.xml auto.strict) == 'auto.latest' ]]; then
+        __compat="${CDAP_HOME}"/"${__latest_hbase_compat_cdh}"/lib/* # if allowed, return the latest CDH HBase version for unsupported HBase version
+        echo "'auto.latest' resolution strategy found. Using ${__latest_hbase_compat_cdh} for HBase version: ${HBASE_VERSION}"
+      else
+        die "Unknown or Unsupported CDH HBase version found: ${HBASE_VERSION}"
+      fi
+      ;;
+    *)
+      if [[ $(cdap_get_conf "hbase.version.resolution.strategy" "${CDAP_CONF}"/cdap-site.xml auto.strict) == 'auto.latest' ]]; then
+        __compat="${CDAP_HOME}"/"${__latest_hbase_compat}"//lib/* # if allowed, return the latest HBase version for unsupported HBase version
+        echo "'auto.latest' resolution strategy found. Using ${__latest_hbase_compat_cdh} for HBase version: ${HBASE_VERSION}"
+      else
+        die "Unknown or Unsupported HBase version found: ${HBASE_VERSION}"
+      fi
+      ;;
   esac
   export CLASSPATH="${__compat}":${CLASSPATH}
   return 0
