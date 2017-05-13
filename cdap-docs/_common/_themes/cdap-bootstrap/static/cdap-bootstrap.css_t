@@ -1,0 +1,40 @@
+/*
+ * cdap-bootstrap.css_t
+ * ~~~~~~~~~~~~~~~~~~~~
+ *
+ * Sphinx stylesheet -- cdap theme.
+ *
+ * :copyright: Copyright 2017 by Cask Data, Inc.
+ * :license: Apache Version 2.0, see LICENSE for details.
+ *
+ */
+
+/*
+
+Color Scheme
+
+Cask Orange:
+color: #ff6600;
+
+Background Dark:   Grey_03
+color: #666666;
+
+Background Middle: Grey_04
+color: #999999;
+
+Background Light:  Grey_05
+color: #CCCCCC;
+
+*/
+
+.navbar-inverse {
+    background-color: #666666;
+    background-image: none;
+    background-repeat: no-repeat;
+    border-color: #666666;
+    box-shadow: 0 0 4px rgba(0, 0, 0, .14), 0 4px 8px rgba(0, 0, 0, .28);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 10005;
+}

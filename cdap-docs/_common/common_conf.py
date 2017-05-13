@@ -52,7 +52,7 @@ def get_sdk_version():
         full_version = full_version_temp.strip().replace('<version>', '').replace('</version>', '')
         version = full_version.replace('-SNAPSHOT', '')
         short_version = "%s.%s" % tuple(version.split('.')[0:2])
-       
+
         v = full_version.replace('-', '.').split('.')
         if len(v) > 3:
             s = "%s-" % v[3]
@@ -62,7 +62,7 @@ def get_sdk_version():
         else:
             v.append('')
             v.append('')
-        version_tuple = tuple(v)      
+        version_tuple = tuple(v)
     except:
         print "Unexpected error: %s" % sys.exc_info()[0]
         pass
@@ -224,7 +224,7 @@ if git_build_vars.has_key(GIT_BRANCH_PARENT):
     cdap_java_source_github_pattern = "https://github.com/caskdata/cdap/blob/%s/%%s" % git_build_vars[GIT_BRANCH_PARENT]
 else:
     cdap_java_source_github_pattern = ''
-    
+
 GIT_BRANCH_CDAP_SECURITY_EXTN = 'GIT_BRANCH_CDAP_SECURITY_EXTN'
 if git_build_vars.has_key(GIT_BRANCH_CDAP_SECURITY_EXTN):
     cdap_security_extn_github_pattern = "https://github.com/caskdata/cdap-security-extn/blob/%s/%%s" % \
@@ -296,7 +296,7 @@ rst_epilog = """
 .. |--| unicode:: U+2013   .. en dash
 .. |---| unicode:: U+2014  .. em dash, trimming surrounding whitespace
    :trim:
-  
+
 .. |non-breaking-space| unicode:: U+00A0 .. non-breaking space
 """
 
@@ -368,7 +368,7 @@ if release and version:
     version_list = version.split('.')
     version_list[1] = str(int(version_list[1])+1)
     release_range = "[%s,%s)" % (release, '.'.join(version_list))
-    
+
     rst_epilog += """
 .. |literal-release| replace:: ``%(release)s``
 """ % {'release': release}
@@ -406,7 +406,7 @@ if cdap_apps_version and cdap_apps_compatibile_version:
 
 """ % {'cdap-apps-version': cdap_apps_version, 'cdap-apps-compatibile-version': cdap_apps_compatibile_version}
 else:
-    print 'Unable to find cdap_apps_version and cdap_apps_compatibile_version'    
+    print 'Unable to find cdap_apps_version and cdap_apps_compatibile_version'
 
 cdap_metadata_management_version = os.environ.get('CDAP_METADATA_MANAGEMENT_VERSION')
 if cdap_metadata_management_version:
@@ -418,7 +418,7 @@ if cdap_metadata_management_version:
 
 """ % {'cdap-metadata-management-version': cdap_metadata_management_version}
 else:
-    print 'Unable to find CDAP_METADATA_MANAGEMENT_VERSION'    
+    print 'Unable to find CDAP_METADATA_MANAGEMENT_VERSION'
 
 cdap_pipelines_version = os.environ.get('CDAP_PIPELINES_VERSION')
 if cdap_pipelines_version:
@@ -479,7 +479,6 @@ highlight_language = 'java'
 # html_theme = 'bootstrap'
 # html_theme = 'cdap'
 html_theme = 'cdap-bootstrap'
-# html_theme = 'cdap-bootstrap-v1'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -528,29 +527,31 @@ for m in manuals_list:
 cdap_manuals = []
 for m in cdap_manuals_list:
     cdap_manuals.append(m[0])
-    
+
 cdap_extension_manuals = []
 for m in cdap_extension_manuals_list:
     cdap_extension_manuals.append(m[0])
 
 html_theme_options = {
-  'cdap_manuals': cdap_manuals,
-  'cdap_extension_manuals': cdap_extension_manuals,
-  'docs_url': 'http://docs.cask.co/cdap',
-  'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
-  'language': 'en',
-  'manual': '',
-  'manual_dirs': manual_dirs_list,
-  'manual_titles': manual_titles_list,
-  'manual_icons': manual_icons_list,
-  'meta_git':
-    { 'git_hash': git_hash,
-      'git_timestamp': git_timestamp,
-      'git_release': release,
+    'cdap_manuals': cdap_manuals,
+    'cdap_extension_manuals': cdap_extension_manuals,
+    'docs_url': 'http://docs.cask.co/cdap',
+    'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
+    'language': 'en',
+    'manual': '',
+    'manual_dirs': manual_dirs_list,
+    'manual_titles': manual_titles_list,
+    'manual_icons': manual_icons_list,
+    'meta_git': {
+        'git_hash': git_hash,
+        'git_timestamp': git_timestamp,
+        'git_release': release,
     },
-  'stickysidebar': True,
-  'release': release,
-  'version': version,
+    'stickysidebar': True,
+    'release': release,
+    'version': version,
+    # Sphinx-Bootstrap Options
+    'cdap_bootstrap_custom_css': ['_static/cdap-bootstrap.css'],
 }
 
 def get_manual_dirs():
@@ -574,9 +575,7 @@ html_google_tag_manager_code = ''
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['_themes','../../_common/_themes']
-
-html_theme_path += sphinx_bootstrap_theme.get_html_theme_path()
-
+# html_theme_path += sphinx_bootstrap_theme.get_html_theme_path()
 print "Using html_theme_path: %s" % html_theme_path
 
 # The name for this set of Sphinx documents.  If None, it defaults to
@@ -885,20 +884,20 @@ def source_read_handler(app, docname, source):
             app.env.config.highlight_language_cache = app.env.config.highlight_language
             app.env.config.highlight_language = 'none'
     else:
-        if (not app.env.config.rst_epilog and hasattr(app.env.config, 'rst_epilog_cache') and 
+        if (not app.env.config.rst_epilog and hasattr(app.env.config, 'rst_epilog_cache') and
                 app.env.config.rst_epilog_cache):
             app.env.config.rst_epilog = app.env.config.rst_epilog_cache
-        if (not app.env.config.rst_prolog and hasattr(app.env.config, 'rst_prolog_cache') and 
+        if (not app.env.config.rst_prolog and hasattr(app.env.config, 'rst_prolog_cache') and
                 app.env.config.rst_prolog_cache):
             app.env.config.rst_prolog = app.env.config.rst_prolog_cache
         if (not app.env.config.highlight_language or app.env.config.highlight_language == 'none'):
-            if (hasattr(app.env.config, 'highlight_language_cache') and 
-                app.env.config.highlight_language_cache and 
+            if (hasattr(app.env.config, 'highlight_language_cache') and
+                app.env.config.highlight_language_cache and
                 app.env.config.highlight_language_cache != 'none'):
                 app.env.config.highlight_language = app.env.config.highlight_language_cache
             else:
                 app.env.config.highlight_language = 'java'
-            
+
 
 # -- Configure Application --------------------------------------------------
 

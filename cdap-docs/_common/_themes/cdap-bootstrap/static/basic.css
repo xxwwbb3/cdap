@@ -4,7 +4,7 @@
  *
  * Sphinx stylesheet -- basic theme.
  *
- * :copyright: Copyright 2007-2013 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2015 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -100,15 +100,14 @@ ul.search {
 }
 
 ul.search li {
-    padding: 5px 0 5px 0px;
+    padding: 5px 0 5px 20px;
+    background-image: url(file.png);
+    background-repeat: no-repeat;
+    background-position: 0 7px;
 }
 
 ul.search li a {
     font-weight: bold;
-    padding: 5px 2px 5px 20px;
-    background-image: url(file.png);
-    background-repeat: no-repeat;
-    background-position: 0 7px;
 }
 
 ul.search li div.context {
@@ -198,7 +197,10 @@ h3:hover > a.headerlink,
 h4:hover > a.headerlink,
 h5:hover > a.headerlink,
 h6:hover > a.headerlink,
-dt:hover > a.headerlink {
+dt:hover > a.headerlink,
+caption:hover > a.headerlink,
+p.caption:hover > a.headerlink,
+div.code-block-caption:hover > a.headerlink {
     visibility: visible;
 }
 
@@ -313,14 +315,17 @@ div.body p.centered {
 table.docutils {
     border: 0;
     border-collapse: collapse;
-    width: 100%;
-    margin-left: 0%;
-    margin-right: 0%;
-    background-color: white;
+}
+
+table caption span.caption-number {
+    font-style: italic;
+}
+
+table caption span.caption-text {
 }
 
 table.docutils td, table.docutils th {
-    padding: 1px 8px 1px 15px;
+    padding: 1px 8px 1px 5px;
     border-top: 0;
     border-left: 0;
     border-right: 0;
@@ -348,6 +353,25 @@ table.citation {
 table.citation td {
     border-bottom: none;
 }
+
+/* -- figures --------------------------------------------------------------- */
+
+div.figure {
+    margin: 0.5em;
+    padding: 0.5em;
+}
+
+div.figure p.caption {
+    padding: 0.3em;
+}
+
+div.figure p.caption span.caption-number {
+    font-style: italic;
+}
+
+div.figure p.caption span.caption-text {
+}
+
 
 /* -- other body styles ----------------------------------------------------- */
 
@@ -480,36 +504,51 @@ table.highlighttable td {
     padding: 0 0.5em 0 0.5em;
 }
 
-div.code-block-filename {
+div.code-block-caption {
     padding: 2px 5px;
     font-size: small;
 }
 
-div.code-block-filename tt {
+div.code-block-caption code {
     background-color: transparent;
 }
 
-div.code-block-filename + pre,
-div.code-block-filename + div.highlight > pre {
+div.code-block-caption + div > div.highlight > pre {
     margin-top: 0;
 }
 
-tt.descname {
+div.code-block-caption span.caption-number {
+    padding: 0.1em 0.3em;
+    font-style: italic;
+}
+
+div.code-block-caption span.caption-text {
+}
+
+div.literal-block-wrapper {
+    padding: 1em 1em 0;
+}
+
+div.literal-block-wrapper div.highlight {
+    margin: 0;
+}
+
+code.descname {
     background-color: transparent;
     font-weight: bold;
     font-size: 1.2em;
 }
 
-tt.descclassname {
+code.descclassname {
     background-color: transparent;
 }
 
-tt.xref, a tt {
+code.xref, a code {
     background-color: transparent;
     font-weight: bold;
 }
 
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
     background-color: transparent;
 }
 
