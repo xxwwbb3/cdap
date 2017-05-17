@@ -532,19 +532,19 @@ for m in manuals_list:
     manuals.append(m[0])
 
 html_theme_options = {
-  'manuals': manuals,
-  'docs_url': 'http://docs.cask.co/cdap',
-  'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
-  'language': 'en',
-  'manual': '',
-  'manual_dirs': manual_dirs_list,
-  'manual_titles': manual_titles_list,
-  'manual_icons': manual_icons_list,
-  'meta_git':
-    { 'git_hash': git_hash,
-      'git_timestamp': git_timestamp,
-      'git_release': release,
-    },
+    'manuals': manuals,
+    'docs_url': 'http://docs.cask.co/cdap',
+    'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
+    'language': 'en',
+    'manual': '',
+    'manual_dirs': manual_dirs_list,
+    'manual_titles': manual_titles_list,
+    'manual_icons': manual_icons_list,
+    'meta_git':
+        { 'git_hash': git_hash,
+          'git_timestamp': git_timestamp,
+          'git_release': release,
+        },
     'stickysidebar': True,
     'release': release,
     'version': version,

@@ -7,7 +7,6 @@
     See http://stackoverflow.com/questions/4870346/can-a-jinja-variables-scope-extend-beyond-in-an-inner-block
 #}
 {%- set CDAP_DOCS = 'CDAP Documentation' %}
-{%- set CDAP_EXTENSIONS = 'CDAP Extensions' %}
 {%- set master_url_root = pathto(master_doc, 1) %}
 {%- if master_url_root == '#' %}{% set master_url_root = '' %}{% endif %}
 {%- if html_short_title_toc != CDAP_DOCS %}{% set master_url_root =  master_url_root + '/..' %}{%- endif %}
@@ -19,10 +18,11 @@
 {%- endfor %}
 {%- set titles =  ['Overview'] + theme_manual_titles %}
 {%- for manual_dir, href, title in [('release-notes',     'reference-manual/release-notes.html', 'Release Notes'),
+                                    ('genindex',          'reference-manual/genindex.html',      'Index'),
                                     ('glossary',          'reference-manual/glossary.html',      'Glossary'),
                                     ('search',            'search.html',                         'Search'),
                                    ] %}
-    {% set _ = theme_cdap_manuals.append(manual_dir) %}
+    {% set _ = theme_manuals.append(manual_dir) %}
     {% set _ = icons.append('') %}
     {% set _ = manual_dirs.append(manual_dir) %}
     {% set _ = hrefs.append(master_url_root + '/../'+ href) %}
@@ -48,5 +48,5 @@
 
   <div role="note" aria-label="manuals links">
     <h3><a href="{{ master_url_root }}{{ _('/../index.html') }}" rel="nofollow">{{ CDAP_DOCS }}</a></h3>
-    {{ build_manuals_list(theme_cdap_manuals, CDAP_DOCS) }}
+    {{ build_manuals_list(theme_manuals, CDAP_DOCS) }}
   </div>

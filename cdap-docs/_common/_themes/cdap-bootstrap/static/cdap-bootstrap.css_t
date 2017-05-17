@@ -220,12 +220,33 @@ form.navbar-form.navbar-right input.form-control {
 	  .bs-sidenav.affix,
 	  .nav.dynamic-scrollspy.affix {
     width: 165px;
+    }
 }
 
+nav.pagenav {
+    padding-left: 10px;
+}
+
+.toctree-l2 {
+    padding-left: 10px;
+}
+
+.toctree-l1.current>a.reference.internal {
+    font-weight: 500;
+    font-weight: bolder;
+}
+
+.toctree-l1.current>a.current.reference.internal {
+    font-weight: 500;
+    font-weight: bolder;
+    color:#ff6600;
+}
+
+.toctree-l2.current>a.current.reference.internal {
+    color:#ff6600;
 }
 
 /* -- Page Nav Scroll Spy (Right Sidebar)             -- */
-
 /* -- Calc max height less top space and bottom space -- */
 
 .nav.dynamic-scrollspy {
@@ -254,7 +275,7 @@ form.navbar-form.navbar-right input.form-control {
 
 /* ============ General ============ */
 
-/* -- Header Links -- */
+/* -- Page Section Head Perma-Links -- */
 
 .headerlink:hover {
 	visibility: visible;
@@ -277,7 +298,7 @@ a.headerlink::before {
 	padding-right: 3px;
 }
 
-/* -- Headers -- */
+/* -- Page Section Heads -- */
 
 h1 {
 	color: #757575;
