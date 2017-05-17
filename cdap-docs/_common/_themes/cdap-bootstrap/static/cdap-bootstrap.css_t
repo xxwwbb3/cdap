@@ -41,15 +41,12 @@ Don't import this until it has been fixed!
 /* -- General -- */
 
 body,html {
+	-moz-osx-font-smoothing: grayscale;
+	-ms-text-size-adjust: 100%;
+	-webkit-font-smoothing: antialiased;
+	-webkit-text-size-adjust: 100%;
 	color: #212121;
 	font: 400 16px/24px Roboto, sans-serif;
-	-moz-osx-font-smoothing: grayscale;
-	-webkit-font-smoothing: antialiased;
-/*
-	margin: 0;
- */
-	-webkit-text-size-adjust: 100%;
-	-ms-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 }
 
@@ -59,6 +56,12 @@ body,html {
 
 a {
     color: #ff6600;
+}
+
+
+p {
+	margin: 16px 0;
+	padding: 0;
 }
 
 /* -- Header -- */
@@ -73,8 +76,8 @@ a {
 /* -- Header First Row -- */
 
 .navbar-header {
-    margin-bottom: 0px;
-    width: 100%;
+	margin-bottom: 0px;
+	width: 100%;
 }
 
 .navbar-text.navbar-version.pull-left {
@@ -82,7 +85,7 @@ a {
 	font: 20px/36px Roboto, sans-serif;
 	letter-spacing: 0;
 	margin-top: 5px;
-    margin-bottom: 0px;
+	margin-bottom: 0px;
 }
 
 .navbar-brand {
@@ -96,9 +99,9 @@ a {
 }
 
 .form-control {
-    border: #999999;
-    border-radius: 2px;
-    color: white ;
+	border: #999999;
+	border-radius: 2px;
+	color: white;
 }
 
 .navbar-search-image {
@@ -121,19 +124,24 @@ form.navbar-form.navbar-right input.form-control {
     background: #999999;
 }
 
+
 /* -- Placeholder color -- */
+
 .form-control::-webkit-input-placeholder {
 	color: white;
 	transition: color .2s;
 }
+
 .form-control:-moz-placeholder {
 	color: white;
 	transition: color .2s;
 }
+
 .form-control::-moz-placeholder {
-	color:white;
+	color: white;
 	transition: color .2s;
 }
+
 .form-control:-ms-input-placeholder {
 	color: white;
 	transition: color .2s;
@@ -148,7 +156,7 @@ form.navbar-form.navbar-right input.form-control {
 	font: 500 14px/44px Roboto,sans-serif;
 	margin: 0;
 	padding: 0 24px;
-    padding-top: 0px;
+	padding-top: 0px;
 	text-transform: uppercase;
 	transition: color .2s;
 }
@@ -164,24 +172,24 @@ form.navbar-form.navbar-right input.form-control {
 }
 
 .navbar-inverse .navbar-nav>li>a {
-    color: rgba(255,255,255,.7);
-    padding-bottom: 11px;
-    padding-top: 11px;
+	color: rgba(255,255,255,.7);
+	padding-bottom: 11px;
+	padding-top: 11px;
 }
 
 /* -- Manual Nav Scroll (Left Sidebar) -- */
 
 #sidebar.bs-sidenav {
-    border-radius: 2px;
-    background-color: #f7f7f7;
-    font-size: 13px;
-    line-height: 16px;
-    margin-bottom: 0;
-    margin-top: 0;
-    padding-top: 8;
-    padding-bottom: 16px;
-    padding-left: 16px;
-    padding-right: 12px;
+	border-radius: 2px;
+	background-color: #f7f7f7;
+	font-size: 13px;
+	line-height: 16px;
+	margin-bottom: 0;
+	margin-top: 0;
+	padding-top: 8;
+	padding-bottom: 16px;
+	padding-left: 16px;
+	padding-right: 12px;
 }
 
 #sidebar h3 {
@@ -197,70 +205,84 @@ form.navbar-form.navbar-right input.form-control {
 }
 
 #sidebar a {
-    padding-left: 0;
-    padding-right: 0;
+	padding-left: 0;
+	padding-right: 0;
 }
 
 #sidebar a:hover {
-    background-color: transparent;
-    color: #ff6600;
-    border-right: 0;
+	background-color: transparent;
+	color: #ff6600;
+	border-right: 0;
 }
 
 @media screen and (min-width: 1200px) {
-  .bs-sidenav.affix-bottom,
-  .bs-sidenav.affix,
-  .nav.dynamic-scrollspy.affix {
+	.bs-sidenav.affix-bottom,
+	  .bs-sidenav.affix,
+	  .nav.dynamic-scrollspy.affix {
     width: 165px;
-  }
+}
+
 }
 
 /* -- Page Nav Scroll Spy (Right Sidebar)             -- */
+
 /* -- Calc max height less top space and bottom space -- */
+
 .nav.dynamic-scrollspy {
-    max-height: calc(100% - 100px - 70px);
+    max-height: calc(100% - 100px - 90px);
 }
 
+
 /* -- Footer -- */
+
+.footer {
+    margin: 16px 0;
+}
+
 .footer-left, .footer-center, .footer-right {
     font: 14px/20px Roboto, sans-serif;
 }
+
 .footer-center {
     text-align: center;
 }
+
 .footer-right {
     text-align: right;
 }
+
 
 /* ============ General ============ */
 
 /* -- Header Links -- */
 
 .headerlink:hover {
-    visibility: visible;
-    text-decoration: none;
+	visibility: visible;
+	text-decoration: none;
 }
 
 a.headerlink {
     visibility: hidden;
 }
 
+
 a.headerlink::before {
-    font: 16px/20px Roboto, sans-serif;
-    content: '\1F517';
-/*
+	font: 16px/20px Roboto, sans-serif;
+	content: '\1F517';
+	/*
     font-size: 0.8em;
  */
-    margin-left: -24px;
-    padding-right: 3px;
+
+	margin-left: -24px;
+	padding-right: 3px;
 }
 
 /* -- Headers -- */
 
 h1 {
-    color: #757575;
-    font: 300 34px/40px Roboto, sans-serif;
-    letter-spacing: -.01em;
+	color: #757575;
+	font: 300 34px/40px Roboto, sans-serif;
+	letter-spacing: -.01em;
 }
 
 h2 {
@@ -272,7 +294,7 @@ h2 {
 }
 
 h3 {
-    border-bottom: 1px dashed #ebebeb;
+	border-bottom: 1px dashed #ebebeb;
 	font: 400 20px/32px Roboto, sans-serif;
 	margin: 32px 0 16px;
 }
@@ -296,36 +318,95 @@ h6 {
 /* -- See also (and keep in sync) these styles: pre tt -- */
 
 .docutils.literal {
-	font: 500 90%/1 Roboto Mono,monospace;
+	background: #f7f7f7;
+	border-radius: 3px;
 	color: #37474f;
-    background: #E9F5FC;
-    border-radius: 3px;
-    padding: 1px 4px;
+	font: 500 90%/1 Roboto Mono,monospace;
+	padding: 1px 4px;
 }
 
 td .docutils.literal {
-    background: #ffffff;
-    border: 0;
-    border-radius: 0;
-    padding: 0;
+	background: #f7f7f7;
+	border: 0;
+	border-radius: 0;
+	padding: 0;
 }
 
 pre {
-    -moz-box-shadow: 1px 1px 1px #d8d8d8;
-    -webkit-box-shadow: 1px 1px 1px #d8d8d8;
-    background-color: #E9F5FC;
-    border: 1px solid #C6C9CB;
-    color: #222;
-    font-size: 1.2em;
-    line-height: 1.5em;
-    margin: 1.5em 0 1.5em 15px;
-    padding: 10px;
-    font: 500 90%/1 Roboto Mono,monospace;
+	background-color: #f7f7f7;
+	border-radius: 2px;
+	color: #37474f;
+	font: 14px/20px Roboto Mono, monospace;
+	margin: 16px 0;
+	overflow-x: auto;
+	padding: 8px;
+	position: relative;
+	border: none;
 }
 
 tt {
-    color: #222;
-    font-family: Roboto Mono,monospace;
-    font-size: 1.2em;
-    font: 500 90%/1 Roboto Mono,monospace;
+	color: #37474f;
+	font-family: Roboto Mono,monospace;
+	font-size: 1.2em;
+	font: 500 90%/1 Roboto Mono,monospace;
+}
+
+/* -- Images -- */
+
+.bordered-image {
+	width: 100%;
+	border: 1px solid #ccc;
+}
+
+.bordered-image.reference.internal.image-reference {
+    border: none;
+}
+
+.figure.align-center {
+	width: 100%;
+	margin: 1em 0;
+	padding: 0 0;
+}
+
+/* --  Admin Manual Installation Images -- */
+
+.admin-manual-step-images.container {
+    padding-left: 0px;
+    text-align: center;
+    width: 100%;
+}
+
+/* -- Tables -- */
+
+.table.table {
+    background: #666666;
+}
+
+.table.table thead {
+    color: #fff;
+    font: 500 16px/24px Roboto, sans-serif;
+    height: 48px;
+    padding: 8px;
+    vertical-align: middle;
+}
+
+/* -- Table Head -- */
+
+.table thead tr th {
+    border-bottom: 0px;
+}
+
+.table thead tr.row-odd {
+    background: none;
+}
+
+.table thead tr.row-even {
+    background: rgba(255, 255, 255, .25);
+}
+
+/* -- Table Body -- */
+
+.table tbody tr.row-even,
+.table tbody tr.row-odd {
+    background: rgba(255, 255, 255, .95);
 }

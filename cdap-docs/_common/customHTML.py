@@ -23,7 +23,7 @@
 
     :copyright: Copyright 2016-2017 by Cask Data, Inc.
     :license: Apache License, Version 2.0, see http://www.apache.org/licenses/LICENSE-2.0
-    :version: 0.2
+    :version: 0.3
 
 """
 
@@ -34,7 +34,8 @@ from sphinx.writers.html import HTMLTranslator
 
 class CustomHTMLTranslator(HTMLTranslator):
     """
-    Our custom, custom HTML translator.
+    Our custom, custom HTML translator. Removes the trailing pilchard and replaces it with
+    a leading link that can be styled using a 'before' pseudo-element.
     """
 
     def depart_title(self, node):
@@ -60,7 +61,7 @@ class CustomHTMLTranslator(HTMLTranslator):
             # title="Permalink to this headline">¶</a></h1>
             # becomes
             # <h1><a class="headerlink" href="#manual-installation-using-packages"
-            # title="Permalink to this headline">¶</a>Manual Installation using Packages</h1>
+            # title="Permalink to this headline"></a>Manual Installation using Packages</h1>
 
             if close_tag.startswith('</h'):
                 self.body.append(u'<a class="headerlink" href="#%s" title="%s"></a>' % (aname, _('Perma-link to this heading')))

@@ -627,7 +627,6 @@ html_static_path = ['../../_common/_static']
 
 html_sidebars = {'**': [
     'manuals.html',
-    'downloads.html',
     'casksites.html',
      ],}
 

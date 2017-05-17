@@ -123,8 +123,9 @@
       </div>
       <div class="{{ bs_span_prefix }}8 footer-center">
 {%- set master_url_root = pathto(master_doc, 1) %}
+{%- set zip_archive = "cdap-docs-" ~ release ~ "-web.zip" %}
 <a class="footer-tab-link" href="{{ master_url_root + '/../reference.html' }}">Copyright</a> &copy; {% trans copyright=copyright|e %}{{ copyright }}{% endtrans %}
-&bull; Download an <a class="footer-tab-link" href="{{ master_url_root + '/../download.zip' }}">archive of the documentation</a>
+&bull; Download an <a class="footer-tab-link" href="http://docs.cask.co/cdap/{{ release }}/{{ zip_archive }}" rel="nofollow">archive of the documentation</a>
       </div>
       <div class="{{ bs_span_prefix }}2 footer-right">
         {%- if not hiderel %}
