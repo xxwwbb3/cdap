@@ -1,0 +1,117 @@
+/*
+ * cdap-dynamicscrollspy.css
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~
+ *
+ * Stylesheet for cdap dynamicscrollspy.css
+ *
+ * :copyright: Copyright 2017 by Cask Data, Inc.
+ * :license: Apache Version 2.0, see LICENSE for details.
+ *
+ */
+
+/*
+Color Scheme
+============
+
+Links
+-----
+Cask Orange:
+color: #ff6600;
+
+Background Dark:   Grey_03
+color: #666666;
+
+Background Middle: Grey_04
+color: #999999;
+
+Background Light:  Grey_05
+color: #CCCCCC;
+
+Text Color
+----------
+color: #212121;
+*/
+
+.nav.dynamic-scrollspy {
+	background: #fff;
+	border-left: 4px solid #ff6600;
+	color: #212121;
+	font-size: 13px;
+	line-height: 16px;
+/*
+	Calc max height less top space and bottom space
+*/
+	max-height: calc(100% - 100px - 50px);
+	overflow-y: auto;
+	padding-left: 0px;
+	padding: 3px;
+	z-index: 10000;
+}
+
+nav.dynamic-scrollspy.affix {
+    position: fixed;
+}
+
+/* All anchors */
+.nav li.dynamic-scrollspy-heading>a,
+.nav li.dynamic-scrollspy-title>a {
+	border-left: 0px rgba(0, 0, 0, 0);
+	color: #212121;
+	padding: 3px;
+}
+
+.nav li.dynamic-scrollspy-title>a {
+    margin: 8px 0 0;
+}
+
+/* All anchors hover: must precede active! */
+.nav li.dynamic-scrollspy-heading>a:hover,
+.nav li.dynamic-scrollspy-title>a:hover {
+	background-color: white;
+	color: #ff6600;
+}
+
+/* First level */
+.nav li.dynamic-scrollspy-heading>a,
+.nav li.dynamic-scrollspy-title>a {
+    padding-left: 12px;
+}
+
+/* Second level */
+.nav .nav li.dynamic-scrollspy-title>a {
+    padding-left: 24px;
+}
+
+/* Third level */
+.nav .nav .nav li.dynamic-scrollspy-title>a {
+    padding-left: 36px;
+}
+
+/* Fourth level */
+.nav .nav .nav .nav li.dynamic-scrollspy-title>a {
+    padding-left: 48px;
+}
+
+/* Fifth level */
+.nav .nav .nav .nav .nav li.dynamic-scrollspy-title>a {
+    padding-left: 60px;
+}
+
+/* Active link */
+li.dynamic-scrollspy-title.scrollspy-active>a {
+	color: #ff6600;
+	font-weight: bold;
+}
+
+/* Always show initial "Contents" heading */
+.nav li.dynamic-scrollspy-heading {
+	color: #666666;
+	display: block;
+	font-weight: bold;
+}
+
+.nav li.dynamic-scrollspy-heading>a {
+	color: #666666;
+	font-weight: bold;
+}
+

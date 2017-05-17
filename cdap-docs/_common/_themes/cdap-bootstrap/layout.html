@@ -2,7 +2,7 @@
     layout.html: extended for CDAP-bootstrap theme
     Assumes using Bootstrap version 3 or higher
 #}
-{% extends "basic/layout.html" %}
+{% extends "layout-basic.html" %}
 
 {% set bootstrap_version = "3.3.6" %}
 {% set bs_span_prefix = "col-md-" %}
@@ -11,7 +11,7 @@
     '_static/bootstrap-' + bootstrap_version + '/css/bootstrap.min.css',
     '_static/bootstrap-' + bootstrap_version + '/css/bootstrap-theme.min.css',
     '_static/bootstrap-sphinx.css',
-    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy.css'
+    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy-3.css'
   ]
 %}
 
@@ -26,7 +26,7 @@
     '_static/js/jquery-fix.js',
     '_static/bootstrap-' + bootstrap_version + '/js/bootstrap.min.js',
     '_static/bootstrap-sphinx.js',
-    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy.js'
+    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy-3.js'
   ]
 %}
 
@@ -40,12 +40,6 @@
 {%- block doctype -%}
 <!DOCTYPE html>
 {%- endblock %}
-
-{# Sidebar: Rework into our Bootstrap nav section. #}
-
-{% macro nav_bar() %}
-{% include "navbar.html" %}
-{% endmacro %}
 
 {%- macro left_sidebar() %}
     {%- if render_sidebar %}
@@ -71,8 +65,9 @@
 (function ($) {
     $('#localtoc-scrollspy').DynamicScrollSpy({
       genIDs: true,
+      startingID: '#main-content',
       testing: false,
-      startingID: '#main-content'
+      ulClassNames: 'hidden-print page-nav'
     });
 }(window.$jqTheme || window.jQuery));
 </script>
@@ -92,8 +87,8 @@
 {% block sidebarsourcelink %}{% endblock %}
 
 {%- block content %}
-{{ nav_bar() }}
-<div class="container">
+{% include "navbar-cdap.html" %}
+<div class="main-container container">
   <div class="row">
     {%- block sidebar1 %}{{ left_sidebar() }}{% endblock %}
     <div class="{{ bs_span_prefix }}{{ bs_content_width }} content" id="main-content">
@@ -106,30 +101,41 @@
 {%- endblock %}
 
 {%- block footer %}
+{#  Code to check relations, controlled by setting in the field list at the top :hide-relations: true #}
+{%- set hiderel = '' %}
+{%- set hiderel_key = 'hide-relations' %}
+{%- if meta is defined %}
+    {%- if hiderel_key in meta %}
+        {%- set hiderel = meta[hiderel_key] %}
+    {%- endif %}
+{%- endif %}
 <footer class="footer">
   <div class="container">
-    <p class="pull-right">
-      <a href="#">Back to top</a>
-      {% if theme_source_link_position == "footer" %}
-        <br/>
-        {% include "sourcelink.html" %}
-      {% endif %}
-    </p>
-    <p>
-    {%- if show_copyright %}
-      {%- if hasdoc('copyright') %}
-        {% trans path=pathto('copyright'), copyright=copyright|e %}&copy; <a href="{{ path }}">Copyright</a> {{ copyright }}.{% endtrans %}<br/>
-      {%- else %}
-        {% trans copyright=copyright|e %}&copy; Copyright {{ copyright }}.{% endtrans %}<br/>
-      {%- endif %}
-    {%- endif %}
-    {%- if last_updated %}
-      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
-    {%- endif %}
-    {%- if show_sphinx %}
-      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
-    {%- endif %}
-    </p>
+    <div class="row">
+      <div class="{{ bs_span_prefix }}2 footer-left">
+        {%- if not hiderel %}
+        {%- if prev and prev.title|striptags|e != '&lt;no title&gt;' %}
+        <a title="{{ prev.title|striptags|e }}" href="{{ prev.link|e }}" />Previous</a>
+        {%- else %}
+        &mdash;
+        {%- endif %}
+        {%- endif %}
+      </div>
+      <div class="{{ bs_span_prefix }}8 footer-center">
+{%- set master_url_root = pathto(master_doc, 1) %}
+<a class="footer-tab-link" href="{{ master_url_root + '/../reference.html' }}">Copyright</a> &copy; {% trans copyright=copyright|e %}{{ copyright }}{% endtrans %}
+&bull; Download an <a class="footer-tab-link" href="{{ master_url_root + '/../download.zip' }}">archive of the documentation</a>
+      </div>
+      <div class="{{ bs_span_prefix }}2 footer-right">
+        {%- if not hiderel %}
+        {%- if next and next.title|striptags|e != '&lt;no title&gt;' %}
+        <a title="{{ next.title|striptags|e }}" href="{{ next.link|e }}" />Next</a>
+        {%- else %}
+        &mdash;
+        {%- endif %}
+        {%- endif %}
+      </div>
+    </div>
   </div>
 </footer>
 {%- endblock %}

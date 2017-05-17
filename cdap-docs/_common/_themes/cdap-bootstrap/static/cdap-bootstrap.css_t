@@ -2,7 +2,7 @@
  * cdap-bootstrap.css_t
  * ~~~~~~~~~~~~~~~~~~~~
  *
- * Sphinx stylesheet -- cdap theme.
+ * Sphinx stylesheet for the CDAP-Bootstrap theme
  *
  * :copyright: Copyright 2017 by Cask Data, Inc.
  * :license: Apache Version 2.0, see LICENSE for details.
@@ -25,16 +25,307 @@ color: #999999;
 Background Light:  Grey_05
 color: #CCCCCC;
 
+Background Extra Light:
+color: #f7f7f7;
+    Left Sidebar
+
 */
 
+@import url("cdap-bootstrap-fonts.css");
+
+/*
+Don't import this until it has been fixed!
+@import url("tabbed-parsed-literal.css");
+ */
+
+/* -- General -- */
+
+body,html {
+	color: #212121;
+	font: 400 16px/24px Roboto, sans-serif;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+/*
+	margin: 0;
+ */
+	-webkit-text-size-adjust: 100%;
+	-ms-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+.main-container.container {
+    margin-top: 80px;
+}
+
+a {
+    color: #ff6600;
+}
+
+/* -- Header -- */
+
 .navbar-inverse {
-    background-color: #666666;
-    background-image: none;
-    background-repeat: no-repeat;
-    border-color: #666666;
-    box-shadow: 0 0 4px rgba(0, 0, 0, .14), 0 4px 8px rgba(0, 0, 0, .28);
-    position: fixed;
-    top: 0;
+	background-color: #666666;
+	background-image: none;
+	border-color: #666666;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .14), 0 4px 8px rgba(0, 0, 0, .28);
+}
+
+/* -- Header First Row -- */
+
+.navbar-header {
+    margin-bottom: 0px;
     width: 100%;
-    z-index: 10005;
+}
+
+.navbar-text.navbar-version.pull-left {
+	color: #fff;
+	font: 20px/36px Roboto, sans-serif;
+	letter-spacing: 0;
+	margin-top: 5px;
+    margin-bottom: 0px;
+}
+
+.navbar-brand {
+	padding-top: 8px;
+	padding-right: 0px;
+}
+
+.navbar-brand img {
+	vertical-align: bottom;
+	height: 120%;
+}
+
+.form-control {
+    border: #999999;
+    border-radius: 2px;
+    color: white ;
+}
+
+.navbar-search-image {
+	color: white;
+	left: 36px;
+	position: relative;
+	vertical-align: middle;
+	transition: color .2s;
+}
+
+.navbar-search-image::before {
+    content: 'search';
+}
+
+form.navbar-form.navbar-right input.form-control {
+    padding-left: 36px;
+}
+
+.form-control {
+    background: #999999;
+}
+
+/* -- Placeholder color -- */
+.form-control::-webkit-input-placeholder {
+	color: white;
+	transition: color .2s;
+}
+.form-control:-moz-placeholder {
+	color: white;
+	transition: color .2s;
+}
+.form-control::-moz-placeholder {
+	color:white;
+	transition: color .2s;
+}
+.form-control:-ms-input-placeholder {
+	color: white;
+	transition: color .2s;
+}
+
+/* -- Header Second Row -- */
+
+.docsite-nav-tab-link {
+	border-bottom: 2px solid transparent;
+	border-top: 2px solid transparent;
+	display: inline-block;
+	font: 500 14px/44px Roboto,sans-serif;
+	margin: 0;
+	padding: 0 24px;
+    padding-top: 0px;
+	text-transform: uppercase;
+	transition: color .2s;
+}
+
+.docsite-nav-tab-link:hover,.docsite-nav-tab-link:focus {
+	color: #fff;
+	text-decoration: none;
+}
+
+.docsite-nav-tab-link-active {
+	border-bottom-color: #fff;
+	color: #fff;
+}
+
+.navbar-inverse .navbar-nav>li>a {
+    color: rgba(255,255,255,.7);
+    padding-bottom: 11px;
+    padding-top: 11px;
+}
+
+/* -- Manual Nav Scroll (Left Sidebar) -- */
+
+#sidebar.bs-sidenav {
+    border-radius: 2px;
+    background-color: #f7f7f7;
+    font-size: 13px;
+    line-height: 16px;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-top: 8;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    padding-right: 12px;
+}
+
+#sidebar h3 {
+	border-bottom-color: rgb(207, 216, 220);
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 16px;
+	margin-bottom: 8px;
+	margin-top: 8px;
+	padding-bottom: 8px;
+}
+
+#sidebar a {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+#sidebar a:hover {
+    background-color: transparent;
+    color: #ff6600;
+    border-right: 0;
+}
+
+@media screen and (min-width: 1200px) {
+  .bs-sidenav.affix-bottom,
+  .bs-sidenav.affix,
+  .nav.dynamic-scrollspy.affix {
+    width: 165px;
+  }
+}
+
+/* -- Page Nav Scroll Spy (Right Sidebar)             -- */
+/* -- Calc max height less top space and bottom space -- */
+.nav.dynamic-scrollspy {
+    max-height: calc(100% - 100px - 70px);
+}
+
+/* -- Footer -- */
+.footer-left, .footer-center, .footer-right {
+    font: 14px/20px Roboto, sans-serif;
+}
+.footer-center {
+    text-align: center;
+}
+.footer-right {
+    text-align: right;
+}
+
+/* ============ General ============ */
+
+/* -- Header Links -- */
+
+.headerlink:hover {
+    visibility: visible;
+    text-decoration: none;
+}
+
+a.headerlink {
+    visibility: hidden;
+}
+
+a.headerlink::before {
+    font: 16px/20px Roboto, sans-serif;
+    content: '\1F517';
+/*
+    font-size: 0.8em;
+ */
+    margin-left: -24px;
+    padding-right: 3px;
+}
+
+/* -- Headers -- */
+
+h1 {
+    color: #757575;
+    font: 300 34px/40px Roboto, sans-serif;
+    letter-spacing: -.01em;
+}
+
+h2 {
+	border-bottom: 1px solid #ebebeb;
+	font: 300 24px/32px Roboto, sans-serif;
+	letter-spacing: -.01em;
+	margin: 40px 0 20px;
+	padding-bottom: 3px;
+}
+
+h3 {
+    border-bottom: 1px dashed #ebebeb;
+	font: 400 20px/32px Roboto, sans-serif;
+	margin: 32px 0 16px;
+}
+
+h4 {
+	font: 400 18px/32px Roboto,sans-serif;
+	margin: 32px 0 16px;
+}
+
+h5 {
+	font: 700 16px/24px Roboto,sans-serif;
+	margin: 32px 0 16px;
+}
+
+h6 {
+	font: 500 16px/24px Roboto,sans-serif;
+	margin: 32px 0 16px;
+}
+
+/* -- Literals ------------------------------------------ */
+/* -- See also (and keep in sync) these styles: pre tt -- */
+
+.docutils.literal {
+	font: 500 90%/1 Roboto Mono,monospace;
+	color: #37474f;
+    background: #E9F5FC;
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+
+td .docutils.literal {
+    background: #ffffff;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+pre {
+    -moz-box-shadow: 1px 1px 1px #d8d8d8;
+    -webkit-box-shadow: 1px 1px 1px #d8d8d8;
+    background-color: #E9F5FC;
+    border: 1px solid #C6C9CB;
+    color: #222;
+    font-size: 1.2em;
+    line-height: 1.5em;
+    margin: 1.5em 0 1.5em 15px;
+    padding: 10px;
+    font: 500 90%/1 Roboto Mono,monospace;
+}
+
+tt {
+    color: #222;
+    font-family: Roboto Mono,monospace;
+    font-size: 1.2em;
+    font: 500 90%/1 Roboto Mono,monospace;
 }

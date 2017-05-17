@@ -617,10 +617,16 @@ html_static_path = ['../../_common/_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
+# html_sidebars = {'**': [
+#     'manuals.html',
+#     'globaltoc.html',
+#     'searchbox.html',
+#     'downloads.html',
+#     'casksites.html',
+#      ],}
+
 html_sidebars = {'**': [
     'manuals.html',
-    'globaltoc.html',
-    'searchbox.html',
     'downloads.html',
     'casksites.html',
      ],}
