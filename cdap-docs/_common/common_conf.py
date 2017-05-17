@@ -81,10 +81,10 @@ def print_sdk_version():
 def get_spark_version():
     spark_version = None
     try:
-        p1 = subprocess.Popen(['grep' , '<spark.version>', '../../../pom.xml' ], stdout=subprocess.PIPE)
+        p1 = subprocess.Popen(['grep' , '<spark1.version>', '../../../pom.xml' ], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(['awk', 'NR==1;START{print $1}'], stdin=p1.stdout, stdout=subprocess.PIPE)
         version = p2.communicate()[0]
-        version = version.strip().replace('<spark.version>', '').replace('</spark.version>', '')
+        version = version.strip().replace('<spark1.version>', '').replace('</spark1.version>', '')
     except:
         print "Unexpected error: %s" % sys.exc_info()[0]
         pass
@@ -334,6 +334,11 @@ if short_version:
         previous_short_version = git_build_vars['GIT_PREVIOUS_SHORT_VERSION']
     else:
         previous_short_version = float(short_version) -0.1
+    if git_build_vars.has_key('GIT_PREVIOUS_VERSION'):
+        previous_version = git_build_vars['GIT_PREVIOUS_VERSION']
+    else:
+        previous_version = "%s.%s" % (previous_short_version, '0')
+
     rst_epilog += """
 .. |short-version| replace:: %(short_version)s
 .. |short-version-x| replace:: %(short_version)s.x
@@ -343,8 +348,11 @@ if short_version:
 .. |previous-short-version| replace:: %(previous_short_version)s
 .. |bold-previous-short-version| replace:: **%(previous_short_version)s**
 .. |literal-previous-short-version| replace:: ``%(previous_short_version)s``
-
-""" % {'short_version': short_version, 'previous_short_version': previous_short_version}
+.. |previous-version| replace:: %(previous_version)s
+""" % {'short_version': short_version,
+       'previous_short_version': previous_short_version,
+       'previous_version': previous_version,
+      }
 
 if version_tuple:
     rst_epilog += """
@@ -497,7 +505,7 @@ html_theme = 'cdap-bootstrap'
 #
 # icon: "" for none, "new-icon" for the ico_new.png
 
-cdap_manuals_list = [
+manuals_list = [
     ['introduction',        'introduction', 'Introduction to CDAP',            '',],
     ['developers-manual',   'developers',  u'Developers’ Manual',              '',],
     ['admin-manual',        'admin',        'Administration Manual',           '',],
@@ -506,11 +514,6 @@ cdap_manuals_list = [
     ['reference-manual',    'reference',    'Reference Manual',                '',],
     ['faqs',                'faqs',         'FAQs',                            '',],
 ]
-
-cdap_extension_manuals_list = [
-]
-
-manuals_list = cdap_manuals_list + cdap_extension_manuals_list
 
 manual_intersphinx_mapping = {}
 manuals_dict = {}
@@ -524,28 +527,23 @@ for m in manuals_list:
     manual_titles_list.append(m[2])
     manual_icons_list.append(m[3])
 
-cdap_manuals = []
-for m in cdap_manuals_list:
-    cdap_manuals.append(m[0])
-
-cdap_extension_manuals = []
-for m in cdap_extension_manuals_list:
-    cdap_extension_manuals.append(m[0])
+manuals = []
+for m in manuals_list:
+    manuals.append(m[0])
 
 html_theme_options = {
-    'cdap_manuals': cdap_manuals,
-    'cdap_extension_manuals': cdap_extension_manuals,
-    'docs_url': 'http://docs.cask.co/cdap',
-    'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
-    'language': 'en',
-    'manual': '',
-    'manual_dirs': manual_dirs_list,
-    'manual_titles': manual_titles_list,
-    'manual_icons': manual_icons_list,
-    'meta_git': {
-        'git_hash': git_hash,
-        'git_timestamp': git_timestamp,
-        'git_release': release,
+  'manuals': manuals,
+  'docs_url': 'http://docs.cask.co/cdap',
+  'json_versions_js': 'http://docs.cask.co/cdap/json-versions.js',
+  'language': 'en',
+  'manual': '',
+  'manual_dirs': manual_dirs_list,
+  'manual_titles': manual_titles_list,
+  'manual_icons': manual_icons_list,
+  'meta_git':
+    { 'git_hash': git_hash,
+      'git_timestamp': git_timestamp,
+      'git_release': release,
     },
     'stickysidebar': True,
     'release': release,
@@ -671,6 +669,8 @@ html_context = {'html_short_title_toc': html_short_title_toc}
 
 # Custom CustomHTMLTranslator to customize formatting of titles
 html_translator_class = 'customHTML.CustomHTMLTranslator'
+
+template_bridge = 'customHTML.CustomTemplateBridge'
 
 html_add_permalinks = u'\U0001F517' # HTML '&#128279;' # Link symbol: see http://www.fileformat.info/info/unicode/char/1f517/index.htm
 

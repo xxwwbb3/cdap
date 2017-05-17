@@ -19,40 +19,53 @@ import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
 import MyDataPrepApi from 'api/dataprep';
 import NamespaceStore from 'services/NamespaceStore';
 import Rx from 'rx';
+import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
+import {objectQuery} from 'services/helpers';
+import ee from 'event-emitter';
+import {sortBy, find} from 'lodash';
 
-export function execute(addDirective) {
-  if (addDirective.length === 0) { return; }
 
-  DataPrepStore.dispatch({
-    type: DataPrepActions.enableLoading
-  });
+export function execute(addDirective, shouldReset, hideLoading = false) {
+  let eventEmitter = ee(ee);
+  eventEmitter.emit('CLOSE_POPOVER');
+  if (!hideLoading) {
+    DataPrepStore.dispatch({
+      type: DataPrepActions.enableLoading
+    });
+  }
 
   let store = DataPrepStore.getState().dataprep;
   let updatedDirectives = store.directives.concat(addDirective);
+
+  if (shouldReset) {
+    updatedDirectives = addDirective;
+  }
 
   let workspaceId = store.workspaceId;
   let namespace = NamespaceStore.getState().selectedNamespace;
 
   let params = {
     namespace,
-    workspaceId,
-    limit: 100,
-    directive: updatedDirectives
+    workspaceId
   };
 
+  let requestBody = directiveRequestBodyCreator(updatedDirectives);
+
   return Rx.Observable.create((observer) => {
-    MyDataPrepApi.execute(params)
+    MyDataPrepApi.execute(params, requestBody)
       .subscribe((res) => {
         observer.onNext(res);
 
         DataPrepStore.dispatch({
           type: DataPrepActions.setDirectives,
           payload: {
-            data: res.value,
+            data: res.values,
             headers: res.header,
             directives: updatedDirectives
           }
         });
+
+        fetchColumnsInformation(params, requestBody, res.header);
       }, (err) => {
         observer.onError(err);
         DataPrepStore.dispatch({
@@ -60,4 +73,128 @@ export function execute(addDirective) {
         });
       });
   });
+}
+
+export function setWorkspace(workspaceId) {
+  let namespace = NamespaceStore.getState().selectedNamespace;
+
+  let params = {
+    namespace,
+    workspaceId
+  };
+
+  return Rx.Observable.create((observer) => {
+    MyDataPrepApi.getWorkspace(params)
+      .subscribe((res) => {
+        let directives = objectQuery(res, 'values', '0', 'recipe', 'directives') || [];
+        let requestBody = directiveRequestBodyCreator(directives);
+
+        let workspaceUri = objectQuery(res, 'values', '0', 'properties', 'path');
+        let workspaceInfo = objectQuery(res, 'values', '0');
+
+        MyDataPrepApi.execute(params, requestBody)
+          .subscribe((response) => {
+            observer.onNext(response);
+
+            DataPrepStore.dispatch({
+              type: DataPrepActions.setWorkspace,
+              payload: {
+                data: response.values,
+                headers: response.header,
+                directives,
+                workspaceId,
+                workspaceUri,
+                workspaceInfo
+              }
+            });
+
+            fetchColumnsInformation(params, requestBody, response.header);
+
+          }, (err) => {
+            // This flow is because of the workspace is empty
+
+            observer.onNext(err);
+            DataPrepStore.dispatch({
+              type: DataPrepActions.setWorkspace,
+              payload: {
+                data: [],
+                headers: [],
+                workspaceId,
+                workspaceUri
+              }
+            });
+          });
+
+      }, (err) => {
+        console.log('get workspace err', err);
+        observer.onError(err);
+      });
+  });
+}
+
+function fetchColumnsInformation(params, requestBody, headers) {
+  MyDataPrepApi.summary(params, requestBody)
+    .subscribe((summaryRes) => {
+      let columns = {};
+
+      headers.forEach((head) => {
+        columns[head] = {
+          general: objectQuery(summaryRes, 'values', 'statistics', head, 'general'),
+          types: objectQuery(summaryRes, 'values', 'statistics', head, 'types'),
+          isValid: objectQuery(summaryRes, 'values', 'validation', head, 'valid')
+        };
+      });
+
+      DataPrepStore.dispatch({
+        type: DataPrepActions.setColumnsInformation,
+        payload: {
+          columns
+        }
+      });
+
+    }, (err) => {
+      console.log('error fetching summary', err);
+    });
+}
+
+export function getWorkspaceList(workspaceId) {
+  let namespace = NamespaceStore.getState().selectedNamespace;
+
+  MyDataPrepApi.getWorkspaceList({ namespace })
+    .subscribe((res) => {
+      if (res.values.length === 0) {
+        DataPrepStore.dispatch({
+          type: DataPrepActions.setWorkspaceList,
+          payload: {
+            list: []
+          }
+        });
+
+        return;
+      }
+
+      let workspaceList = sortBy(res.values, ['name']);
+
+      DataPrepStore.dispatch({
+        type: DataPrepActions.setWorkspaceList,
+        payload: {
+          list: workspaceList
+        }
+      });
+
+      if (workspaceId) {
+        // Set active workspace
+        // Check for existance of the workspaceId
+        let workspaceObj = find(workspaceList, { id: workspaceId });
+
+        let workspaceStream;
+        if (workspaceObj) {
+          workspaceStream = setWorkspace(workspaceId);
+        } else {
+          workspaceStream = setWorkspace(workspaceList[0].id);
+        }
+
+        workspaceStream.subscribe();
+      }
+    });
 }

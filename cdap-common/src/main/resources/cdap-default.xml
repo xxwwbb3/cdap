@@ -171,6 +171,14 @@
   </property>
 
   <property>
+    <name>twill.java.heap.memory.ratio</name>
+    <value>0.7</value>
+    <description>
+      The minimum ratio of heap to non-heap memory for Apache Twill container
+    </description>
+  </property>
+
+  <property>
     <name>twill.java.reserved.memory.mb</name>
     <value>250</value>
     <description>
@@ -210,10 +218,34 @@
   </property>
 
   <property>
+    <name>twill.yarn.am.memory.mb</name>
+    <value>512</value>
+    <description>
+      The memory size in megabytes of the Apache Twill application master container
+    </description>
+  </property>
+
+  <property>
+    <name>twill.yarn.am.reserved.memory.mb</name>
+    <value>${twill.java.reserved.memory.mb}</value>
+    <description>
+      Reserved non-heap memory in megabytes for Apache Twill application master container
+    </description>
+  </property>
+
+  <property>
     <name>twill.zookeeper.namespace</name>
     <value>/twill</value>
     <description>
       ZooKeeper namespace prefix for Apache Twill
+    </description>
+  </property>
+
+  <property>
+    <name>upgrade.thread.pool.size</name>
+    <value>10</value>
+    <description>
+      Number of threads to be used running operations concurrently during a CDAP upgrade
     </description>
   </property>
 
@@ -313,6 +345,16 @@
   </property>
 
   <property>
+    <name>app.program.spark.compat</name>
+    <value>spark1_2.10</value>
+    <description>
+      The Spark compatibility version, if Spark is available. Must be 'spark1_2.10' or 'spark2_2.11'.
+      In distributed mode, this will be overridden by the detected Spark version.
+      In standalone mode, this can be set to the desired version of Spark.
+    </description>
+  </property>
+
+  <property>
     <name>app.program.jvm.opts</name>
     <value>-XX:MaxPermSize=128M ${twill.jvm.gc.opts}</value>
     <description>
@@ -386,6 +428,18 @@
     <value></value>
     <description>
       Scheduler queue for CDAP programs and CDAP Explore queries
+    </description>
+  </property>
+
+  <property>
+    <name>app.deploy.update.schedules</name>
+    <value>true</value>
+    <description>
+      If true, redeploying an application will modify any schedules that currently exist
+      for the application; if false, redeploying an application does not create any new
+      schedules and existing schedules are neither deleted nor updated. This property only
+      affects the redeployment of an application; all related actions or endpoints are
+      unaffected.
     </description>
   </property>
 
@@ -616,6 +670,15 @@
   </property>
 
   <property>
+    <name>data.tx.grace.period</name>
+    <value>86400</value>
+    <description>
+      The time in seconds used to pad transaction max lifetime while pruning.
+    </description>
+    <final>true</final>
+  </property>
+
+  <property>
     <name>data.tx.pruning.plugin.class</name>
     <value>co.cask.data2.txprune.DefaultHBaseTransactionPruningPlugin</value>
     <description>
@@ -788,7 +851,7 @@
 
   <property>
     <name>explore.active.operation.timeout.secs</name>
-    <value>86400</value>
+    <value>82800</value>
     <description>
       Timeout value in seconds for an SQL operation whose result was not
       fetched completely
@@ -936,7 +999,7 @@
     <name>kafka.seed.brokers</name>
     <value>127.0.0.1:9092</value>
     <description>
-      Comma-separated list of CDAP Kafka service brokers; for distributed
+      Comma-separated list of CDAP Kafka service brokers; for Distributed
       CDAP, replace with list of FQDN:port brokers
     </description>
   </property>
@@ -1044,7 +1107,8 @@
     <name>log.base.dir</name>
     <value>/logs/avro</value>
     <description>
-      Base log directory
+      In Distributed CDAP, the HDFS directory under which the system log pipeline saves
+      log files
     </description>
   </property>
 
@@ -1052,7 +1116,8 @@
     <name>log.collection.root</name>
     <value>${local.data.dir}/logs</value>
     <description>
-      Root location for collecting logs when in Standalone CDAP
+      In Standalone CDAP, the local directory under which the system log pipeline saves
+      log files
     </description>
   </property>
 
@@ -1068,7 +1133,7 @@
     <name>log.pipeline.cdap.dir.permissions</name>
     <value>700</value>
     <description>
-      Permissions to use for directories created by the system log appender
+      Permissions used by the system log pipeline when creating directories
     </description>
   </property>
 
@@ -1076,7 +1141,7 @@
     <name>log.pipeline.cdap.file.cleanup.interval.mins</name>
     <value>1440</value>
     <description>
-      Time in minutes for each interval of the log cleanup thread to run
+      Time in minutes between runs of the log cleanup thread
     </description>
   </property>
 
@@ -1084,8 +1149,8 @@
     <name>log.pipeline.cdap.file.cleanup.transaction.timeout</name>
     <value>60</value>
     <description>
-      Transaction timeout in seconds for running file cleanup tasks. This
-      should not be larger than ${data.tx.max.timeout}.
+      Transaction timeout in seconds used by the log cleanup thread. This
+      should not be greater than ${data.tx.max.timeout}.
     </description>
   </property>
 
@@ -1093,8 +1158,7 @@
     <name>log.pipeline.cdap.file.max.lifetime.ms</name>
     <value>21600000</value>
     <description>
-      Maximum time in milliseconds a file is kept open by the system log
-      appender
+      Maximum time span in milliseconds of a log file created by the system log pipeline
     </description>
   </property>
 
@@ -1102,7 +1166,7 @@
     <name>log.pipeline.cdap.file.max.size.bytes</name>
     <value>104857600</value>
     <description>
-      Maximum size in bytes of a file kept open by the system log appender
+      Maximum size in bytes of a log file created by the system log pipeline
     </description>
   </property>
 
@@ -1110,7 +1174,7 @@
     <name>log.pipeline.cdap.file.permissions</name>
     <value>600</value>
     <description>
-      Permissions to set for files created by the system log appender
+      Permissions used by the system log pipeline when creating files
     </description>
   </property>
 
@@ -1118,8 +1182,7 @@
     <name>log.pipeline.cdap.file.retention.duration.days</name>
     <value>7</value>
     <description>
-      Maximum time in days a file is kept before it can be deleted by log
-      cleanup
+      Time in days a log file is retained
     </description>
   </property>
 
@@ -1128,7 +1191,7 @@
     <value>10485760</value>
     <description>
       Number of bytes for the sync interval setting of the Avro file written
-      by the system log appender
+      by the system log pipeline
     </description>
   </property>
 
@@ -1138,7 +1201,7 @@
     <description>
       The ratio of total memory used for determining processing pipeline
       buffer size. This property is only used if
-      ${log.process.pipeline.buffer.size} is set to zero and the value
+      ${log.process.pipeline.buffer.size} is set to zero and this value
       should be greater than zero and less than one.
     </description>
   </property>
@@ -1414,6 +1477,17 @@
 
 
   <!-- Messaging System Configuration -->
+
+  <property>
+    <name>messaging.cache.size.mb</name>
+    <value>30</value>
+    <description>
+      Memory in megabytes for the cache size used by the messaging service
+      for caching recently published messages. Currently, only topics listed
+      in the ${messaging.system.topics} configuration have caching enabled.
+      Set it to 0 to disable caching.
+    </description>
+  </property>
 
   <property>
     <name>messaging.container.instances</name>
@@ -1780,17 +1854,6 @@
   </property>
 
   <property>
-    <name>metrics.messaging.fetcher.limit</name>
-    <value>200</value>
-    <description>
-      Maximum number of metrics messages to be fetched from the messaging
-      fetcher at a time. It is also the maximum number of metric values to
-      be persisted in the metrics store after the number of fetched messages
-      reaches the limit.
-    </description>
-  </property>
-
-  <property>
     <name>metrics.messaging.meta.table</name>
     <value>metrics.messaging.meta</value>
     <description>
@@ -1899,6 +1962,23 @@
     <value>${http.service.worker.threads}</value>
     <description>
       Number of Netty service worker threads for metrics HTTP services
+    </description>
+  </property>
+
+  <property>
+    <name>metrics.processor.queue.size</name>
+    <value>20000</value>
+    <description>
+      The maximum size of a queue where metrics processor temporarily stores newly fetched metrics in memory
+      before persisting them
+    </description>
+  </property>
+
+  <property>
+    <name>metrics.processor.max.delay.ms</name>
+    <value>3000</value>
+    <description>
+      The maximum delay allowed between the latest metrics timestamp and the time when it is processed
     </description>
   </property>
 
@@ -2780,7 +2860,7 @@
     <value>/${root.namespace}/security/auth</value>
     <description>
       Parent node in ZooKeeper used for secret key distribution in
-      distributed mode
+      Distributed CDAP
     </description>
   </property>
 

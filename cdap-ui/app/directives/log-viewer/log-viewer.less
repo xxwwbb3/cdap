@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Cask Data, Inc.
+ * Copyright © 2016-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -29,8 +29,8 @@
 @searchbar-placeholder-color: #787878;
 @searchbar-input-color: #9cbcfc;
 @timeline-buffer-color: #a6a6a6;
-@error-color: #f65454;
-@warning-color: #f6b354;
+@error-color: #ff1744;
+@warning-color: #ffa726;
 @selected-row-color: #e4e4e4;
 @application-primary-color: #43b82f;
 @application-secondary-color: #d15668;
@@ -115,6 +115,7 @@ body {
       border-radius: 3px;
       font-size: 11px;
       max-width: 600px;
+      white-space: pre-wrap;
       &.top {
         margin-top: -2px;
         .tooltip-arrow {
@@ -129,7 +130,10 @@ body {
   }
 }
 
-my-log-viewer {
+my-log-viewer,
+my-log-viewer-preview {
+  font-family: Helvetica, Arial, sans-serif;
+
   .empty-buffer {
     display: none;
   }
@@ -137,7 +141,7 @@ my-log-viewer {
   .row-expanded {
     td,
     span {
-      white-space: normal;
+      white-space: pre-wrap;
     }
 
     td.source {
@@ -324,6 +328,10 @@ my-log-viewer {
           margin-bottom: 4px;
           margin-left: 9px;
         }
+        .log-stats-errors,
+        .log-stats-warnings {
+          cursor: pointer;
+        }
         .log-stats {
           font-size: @headerbar-font-size;
           margin-right: 15px;
@@ -355,6 +363,11 @@ my-log-viewer {
           border-radius: 4px;
           margin-right: 3px;
           outline: grey;
+        }
+        .include-system {
+          color: white;
+          margin-right: 15px;
+          cursor: pointer;
         }
         .view-raw {
           max-width: 110px;
@@ -425,26 +438,35 @@ my-log-viewer {
       border-bottom: none;
     }
 
-    table.scroll thead {
-      border-bottom: 1px solid #cccccc;
-      display: block;
-    }
+    table.scroll thead { border-bottom: 1px solid #cccccc; }
 
     .logs-table {
       height: ~"-moz-calc(100vh - 356px)";
       height: ~"-webkit-calc(100vh - 356px)";
       height: ~"calc(100vh - 356px)";
+      font-weight: 300;
 
-      tbody {
-        height: ~"-moz-calc(100vh - 356px - 46px)";
-        height: ~"-webkit-calc(100vh - 356px - 46px)";
-        height: ~"calc(100vh - 356px - 46px)";
+      .logs-table-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: ~"-moz-calc(100% - 47px)";
+        height: ~"-webkit-calc(100% - 47px)";
+        height: ~"calc(100% - 47px)";
+        background-color: @selected-row-color;
+
+        .table { border-top: 0; }
 
         td {
-          color: #666666;
-          font-size: 11px;
+          color: #333333;
+          font-size: 14px;
           text-overflow: ellipsis;
           white-space: nowrap;
+          .display-level {
+            font-size: 12px;
+            font-weight: 400;
+          }
+          .warning { color: @warning-color; }
+          .error { color: @error-color; }
         }
       }
 
@@ -461,7 +483,6 @@ my-log-viewer {
 
       tr {
         width: 100%;
-        display: table;
         background-color: @table-background-color;
 
         &.display-time {
@@ -482,12 +503,6 @@ my-log-viewer {
           white-space: normal;
           background-color: @selected-row-color;
 
-          .display-time,
-          .level {
-            position: relative;
-            top: -9px;
-          }
-
           td,
           span {
             white-space: normal;
@@ -505,8 +520,14 @@ my-log-viewer {
         }
 
         td {
-          line-height: 18px;
+          line-height: 30px;
           border-top: 0;
+          color: #666666;
+          font-size: 11px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          border-left: 0;
+          border-right: 0;
 
           .fa-chevron-right {
             color: #393939;
@@ -518,8 +539,6 @@ my-log-viewer {
           }
           .fa-chevron-down {
             color: #393939;
-            position: relative;
-            top: -12px;
             font-size: 8px;
             bottom: 1px;
             margin-left: 4px;
@@ -528,6 +547,7 @@ my-log-viewer {
         }
 
         .log-message {
+          width: 100%;
           padding-right: 5px;
         }
       }
@@ -552,7 +572,7 @@ my-log-viewer {
           padding-left: 5px;
           padding-right: 0;
           padding-top: 10px;
-          font-size: 12px;
+          font-size: 14px;
           font-family: inherit;
           background-color: @stack-trace-background-color;
           color: @stack-trace-font-color;
@@ -565,8 +585,6 @@ my-log-viewer {
         border-color: @border-color;
         color: #333333;
       }
-
-      font-weight: 300;
 
       tbody tr:hover {
         background-color: @selected-row-color;
@@ -593,12 +611,11 @@ my-log-viewer {
       td {
         padding: 0;
         padding-left: 10px;
-        max-width: 0;
         vertical-align: middle;
         line-height: 12px;
         height: 10px;
         overflow: hidden;
-        font-size: 12px;
+        font-size: 14px;
         border-color: @border-color;
       }
       td.time-stack-trace {
@@ -608,7 +625,6 @@ my-log-viewer {
         &.table-bordered {
           border-color: @border-color;
           margin-bottom: 0;
-          height: 100%;
           table-layout: fixed;
         }
         margin-top: 0;
@@ -620,6 +636,10 @@ my-log-viewer {
         th:hover,
         th:focus {
           cursor: default;
+          font-size: 14px;
+          border-left: 0;
+          border-right: 0;
+
           ul.dropdown-menu { width: 30px; }
 
           li {
@@ -627,7 +647,7 @@ my-log-viewer {
           }
         }
         td {
-          line-height: 18px;
+          line-height: 30px;
         }
         .table-text-content {
           display: inline-block;
@@ -648,8 +668,6 @@ my-log-viewer {
       }
 
       tbody {
-        overflow: auto;
-        display: block;
         background-color: @selected-row-color;
         .message {
           padding-left: 10px;
@@ -665,7 +683,7 @@ my-log-viewer {
       }
 
       .time {
-        width: 130px;
+        width: 150px;
         max-width: initial;
         padding-left: 15px;
       }
@@ -699,7 +717,7 @@ my-log-viewer {
 
       .source,
       .source-header {
-        width: 18%;
+        width: 320px;
       }
 
       .source {
@@ -710,6 +728,8 @@ my-log-viewer {
       }
 
       .message-header {
+        width: 100%;
+
         .fa {
           position: relative;
           bottom: 1px;

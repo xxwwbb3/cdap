@@ -49,7 +49,7 @@ public class DataPipelineApp extends AbstractApplication<ETLBatchConfig> {
   private static final Set<String> supportedPluginTypes = ImmutableSet.of(
     BatchSource.PLUGIN_TYPE, BatchSink.PLUGIN_TYPE, Transform.PLUGIN_TYPE, BatchJoiner.PLUGIN_TYPE,
     Constants.CONNECTOR_TYPE, BatchAggregator.PLUGIN_TYPE, SparkCompute.PLUGIN_TYPE, SparkSink.PLUGIN_TYPE,
-    Action.PLUGIN_TYPE, ErrorTransform.PLUGIN_TYPE);
+    Action.PLUGIN_TYPE, ErrorTransform.PLUGIN_TYPE, Constants.SPARK_PROGRAM_PLUGIN_TYPE);
 
   @Override
   public void configure() {
@@ -69,7 +69,8 @@ public class DataPipelineApp extends AbstractApplication<ETLBatchConfig> {
         .setExploreInputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat")
         .setExploreOutputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat")
         .setTableProperty("avro.schema.literal", Constants.ERROR_SCHEMA.toString())
-        .build());
+        .build(),
+      config.getEngine());
     BatchPipelineSpec spec = specGenerator.generateSpec(config);
 
     addWorkflow(new SmartWorkflow(spec, supportedPluginTypes, getConfigurer(), config.getEngine()));

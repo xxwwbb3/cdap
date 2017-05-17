@@ -27,7 +27,7 @@
   </parent>
 
   <artifactId>cdap-api-spark</artifactId>
-  <name>CDAP Spark API</name>
+  <name>CDAP Spark1 API Scala 2.10</name>
   <packaging>jar</packaging>
 
   <dependencies>
@@ -40,7 +40,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <scope>provided</scope>
+      <version>${scala2.10.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
@@ -181,7 +181,109 @@
         <artifactId>scala-maven-plugin</artifactId>
         <version>3.2.2</version>
       </plugin>
+      <!-- copy the source from cdap-api-spark-base in order to compile everything as scala 2.10 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+          <execution>
+            <id>copy-api-base</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/generated-sources/cdap-api-spark-base</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.parent.basedir}/cdap-api-spark-base</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.build.directory}/generated-sources/cdap-api-spark-base/src/main/java</source>
+                <source>${project.build.directory}/generated-sources/cdap-api-spark-base/src/main/scala</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- This profile is just for Spark development in IDE, don't use it in normal Maven build -->
+      <id>spark1-dev</id>
+      <properties>
+        <spark.api.base.dir>${project.basedir}/../cdap-api-spark-base</spark.api.base.dir>
+      </properties>
+      <build>
+        <plugins>
+          <!-- Disable the copying of files from base -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+              <execution>
+                <id>copy-api-base</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Symlink the source from base -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <id>mkdir-symlink-dir</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <mkdir dir="${project.build.directory}/generated-sources/cdap-api-spark-base/src"/>
+                  </target>
+                </configuration>
+              </execution>
+              <execution>
+                <id>symlink-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <symlink link="${project.build.directory}/generated-sources/cdap-api-spark-base/src/main" resource="${spark.api.base.dir}/src/main" overwrite="true" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

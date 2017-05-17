@@ -28,6 +28,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileContext;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.twill.filesystem.FileContextLocationFactory;
 import org.apache.twill.filesystem.LocalLocationFactory;
 import org.apache.twill.filesystem.LocationFactory;
@@ -88,9 +89,12 @@ public final class LocationRuntimeModule extends RuntimeModule {
     @Singleton
     private LocationFactory providesLocationFactory(Configuration hConf, CConfiguration cConf, FileContext fc) {
       final String namespace = cConf.get(Constants.CFG_HDFS_NAMESPACE);
-      LOG.info("HDFS namespace is {}",  namespace);
+      LOG.debug("HDFS namespace is {}", namespace);
 
-      return new FileContextLocationFactory(hConf, fc, namespace);
+      if (UserGroupInformation.isSecurityEnabled()) {
+        return new FileContextLocationFactory(hConf, namespace);
+      }
+      return new InsecureFileContextLocationFactory(hConf, namespace, fc);
     }
   }
 }

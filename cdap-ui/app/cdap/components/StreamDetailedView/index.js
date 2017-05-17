@@ -22,44 +22,41 @@ import {objectQuery} from 'services/helpers';
 import NamespaceStore from 'services/NamespaceStore';
 import {MyStreamApi} from 'api/stream';
 import {MyMetadataApi} from 'api/metadata';
-import isNil from 'lodash/isNil';
-import isEmpty from 'lodash/isEmpty';
 import shortid from 'shortid';
 import T from 'i18n-react';
 import StreamDetaildViewTab from 'components/StreamDetailedView/Tabs';
-import {MySearchApi} from 'api/search';
-import {parseMetadata} from 'services/metadata-parser';
 import FastActionToMessage from 'services/fast-action-message-helper';
 import capitalize from 'lodash/capitalize';
-import Redirect from 'react-router/Redirect';
+import {Redirect} from 'react-router-dom';
 import Page404 from 'components/404';
 import BreadCrumb from 'components/BreadCrumb';
 import ResourceCenterButton from 'components/ResourceCenterButton';
 import Helmet from 'react-helmet';
+import queryString from 'query-string';
 
 require('./StreamDetailedView.scss');
 
 export default class StreamDetailedView extends Component {
   constructor(props) {
     super(props);
+    let searchObj = queryString.parse(objectQuery(this.props, 'location', 'search'));
     this.state = {
       entityDetail: objectQuery(this.props, 'location', 'state', 'entityDetail') || {
         schema: null,
         programs: []
       },
       loading: true,
-      entityMetadata: objectQuery(this.props, 'location', 'state', 'entityMetadata') || {},
       isInvalid: false,
       routeToHome: false,
       successMessage: null,
       notFound: false,
-      modalToOpen: objectQuery(this.props, 'location', 'query', 'modalToOpen') || '',
+      modalToOpen: objectQuery(searchObj, 'modalToOpen') || '',
       previousPathName: null
     };
   }
 
   componentWillMount() {
-    let {namespace, streamId} = this.props.params;
+    let {namespace, streamId} = this.props.match.params;
     let selectedNamespace = NamespaceStore.getState().selectedNamespace;
     let previousPathName = objectQuery(this.props, 'location', 'state', 'previousPathname')  || `/ns/${selectedNamespace}?overviewid=${streamId}&overviewtype=stream`;
     if (!namespace) {
@@ -73,13 +70,7 @@ export default class StreamDetailedView extends Component {
       previousPathName
     });
     this.fetchEntityDetails(namespace, streamId);
-    this.fetchEntityMetadata(namespace, streamId);
-    if (
-      !isNil(this.state.entityMetadata) &&
-      !isEmpty(this.state.entityMetadata) &&
-      !isNil(this.state.entityDetail) &&
-      !isEmpty(this.state.entityDetail)
-    ) {
+    if (this.state.entityDetail.id) {
       this.setState({
         loading: false
       });
@@ -88,12 +79,12 @@ export default class StreamDetailedView extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let {namespace: currentNamespace, streamId: currentStreamId} = this.props.params;
-    let {namespace: nextNamespace, streamId: nextStreamId} = nextProps.params;
+    let {namespace: currentNamespace, streamId: currentStreamId} = this.props.match.params;
+    let {namespace: nextNamespace, streamId: nextStreamId} = nextProps.match.params;
     if (currentNamespace === nextNamespace && currentStreamId === nextStreamId) {
       return;
     }
-    let {namespace, streamId} = nextProps.params;
+    let {namespace, streamId} = nextProps.match.params;
     if (!namespace) {
       namespace = NamespaceStore.getState().selectedNamespace;
     }
@@ -106,11 +97,9 @@ export default class StreamDetailedView extends Component {
         schema: null,
         programs: []
       },
-      loading: true,
-      entityMetadata: {}
+      loading: true
     }, () => {
       this.fetchEntityDetails(namespace, streamId);
-      this.fetchEntityMetadata(namespace, streamId);
     });
   }
 
@@ -147,7 +136,8 @@ export default class StreamDetailedView extends Component {
               name: appId, // FIXME: Finalize on entity detail for fast action
               app: appId,
               id: streamId,
-              type: 'stream'
+              type: 'stream',
+              properties: res[0]
             };
 
             this.setState({
@@ -172,38 +162,6 @@ export default class StreamDetailedView extends Component {
     }
   }
 
-  fetchEntityMetadata(namespace) {
-    if (
-      isNil(this.state.entityMetadata) ||
-      isEmpty(this.state.entityMetadata)
-    ) {
-      // FIXME: This is NOT the right way. Need to figure out a way to be more efficient and correct.
-
-      MySearchApi
-        .search({
-          namespace,
-          query: this.props.params.streamId
-        })
-        .map(res => res.results.map(parseMetadata))
-        .subscribe(entityMetadata => {
-          if (!entityMetadata.length) {
-            this.setState({
-              loading: false,
-              notFound: true
-            });
-          } else {
-            let metadata = entityMetadata
-              .filter(en => en.type === 'stream')
-              .find( en => en.id === this.props.params.streamId);
-            this.setState({
-              entityMetadata: metadata,
-              loading: false
-            });
-          }
-        });
-    }
-  }
-
   goToHome(action) {
     if (action === 'delete') {
       let selectedNamespace = NamespaceStore.getState().selectedNamespace;
@@ -214,7 +172,7 @@ export default class StreamDetailedView extends Component {
     }
     let successMessage;
     if (action === 'setPreferences') {
-      successMessage = FastActionToMessage(action, {entityType: capitalize(this.state.entityMetadata.type)});
+      successMessage = FastActionToMessage(action, {entityType: capitalize(this.state.entityDetail.type)});
     } else {
       successMessage = FastActionToMessage(action);
     }
@@ -242,7 +200,7 @@ export default class StreamDetailedView extends Component {
       return (
         <Page404
           entityType="stream"
-          entityName={this.props.params.streamId}
+          entityName={this.props.match.params.streamId}
         />
       );
     }
@@ -251,9 +209,9 @@ export default class StreamDetailedView extends Component {
       label: T.translate('commons.back')
     }];
     return (
-      <div className="app-detailed-view streams-deatiled-view">
+      <div className="app-detailed-view streams-detailed-view">
         <Helmet
-          title={T.translate('features.StreamDetailedView.Title', {streamId: this.props.params.streamId})}
+          title={T.translate('features.StreamDetailedView.Title', {streamId: this.props.match.params.streamId})}
         />
         <ResourceCenterButton />
         <BreadCrumb
@@ -262,14 +220,14 @@ export default class StreamDetailedView extends Component {
           currentStateLabel={T.translate('commons.stream')}
         />
         <OverviewMetaSection
-          entity={this.state.entityMetadata}
+          entity={this.state.entityDetail}
           onFastActionSuccess={this.goToHome.bind(this)}
           onFastActionUpdate={this.goToHome.bind(this)}
           fastActionToOpen={this.state.modalToOpen}
           showFullCreationTime={true}
         />
         <StreamDetaildViewTab
-          params={this.props.params}
+          params={this.props.match.params}
           pathname={this.props.location.pathname}
           entity={this.state.entityDetail}
         />
@@ -285,9 +243,6 @@ export default class StreamDetailedView extends Component {
 }
 
 StreamDetailedView.propTypes = {
-  params: PropTypes.shape({
-    streamId: PropTypes.string,
-    namespace: PropTypes.string
-  }),
-  location: PropTypes.any
+  match: PropTypes.object,
+  location: PropTypes.object
 };

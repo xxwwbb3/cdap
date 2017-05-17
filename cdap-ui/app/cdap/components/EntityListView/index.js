@@ -18,7 +18,6 @@ import React, {Component, PropTypes} from 'react';
 import SearchStore from 'components/EntityListView/SearchStore';
 import {search, updateQueryString} from 'components/EntityListView/SearchStore/ActionCreator';
 import HomeListView from 'components/EntityListView/ListView';
-import MyUserStoreApi from 'api/userstore';
 import isNil from 'lodash/isNil';
 import EntityListHeader from 'components/EntityListView/EntityListHeader';
 import EntityListInfo from 'components/EntityListView/EntityListInfo';
@@ -36,10 +35,11 @@ import isEqual from 'lodash/isEqual';
 import isEmpty from 'lodash/isEmpty';
 import intersection from 'lodash/intersection';
 import {objectQuery} from 'services/helpers';
-import WelcomeScreen from 'components/EntityListView/WelcomeScreen';
 import Page404 from 'components/404';
 import classnames from 'classnames';
 import T from 'i18n-react';
+import queryString from 'query-string';
+
 import {
   DEFAULT_SEARCH_FILTERS, DEFAULT_SEARCH_SORT,
   DEFAULT_SEARCH_QUERY, DEFAULT_SEARCH_SORT_OPTIONS,
@@ -57,10 +57,9 @@ export default class EntityListView extends Component {
       limit: DEFAULT_SEARCH_PAGE_SIZE,
       total: 0,
       overview: true, // Start showing spinner until we get a response from backend.
-      userStoreObj: null,
-      showSplash: true,
       namespaceNotFound: false
     };
+    this.unmounted = false;
     this.eventEmitter = ee(ee);
     // Maintaining a retryCounter outside the state as it doesn't affect the state/view directly.
     // We just need to retry for 5 times exponentially and then stop with a message.
@@ -71,23 +70,13 @@ export default class EntityListView extends Component {
     this.eventEmitter.on(globalEvents.PUBLISHPIPELINE, this.refreshSearchByCreationTime);
     this.eventEmitter.on(globalEvents.ARTIFACTUPLOAD, this.refreshSearchByCreationTime);
   }
-  componentWillMount() {
-    MyUserStoreApi.get().subscribe((res) => {
-      let userProperty = typeof res.property === 'object' ? res.property : {};
-      let showSplash = userProperty['user-has-visited'] || false;
-      this.setState({
-        userStoreObj : res,
-        showSplash : showSplash
-      });
-    });
-  }
   componentDidMount() {
     let namespaces = NamespaceStore.getState().namespaces.map(ns => ns.name);
     // for when we are already on the non-existing namespace
     if (namespaces.length) {
       let selectedNamespace = NamespaceStore.getState().selectedNamespace;
       if (namespaces.indexOf(selectedNamespace) === -1) {
-        this.setState({
+        !this.unmounted && this.setState({
           namespaceNotFound: true
         });
       }
@@ -96,11 +85,11 @@ export default class EntityListView extends Component {
       let selectedNamespace = NamespaceStore.getState().selectedNamespace;
       let namespaces = NamespaceStore.getState().namespaces.map(ns => ns.name);
       if (namespaces.length && namespaces.indexOf(selectedNamespace) === -1) {
-        this.setState({
+        !this.unmounted && this.setState({
           namespaceNotFound: true
         });
       } else {
-        this.setState({
+        !this.unmounted && this.setState({
           namespaceNotFound: false
         });
       }
@@ -113,7 +102,7 @@ export default class EntityListView extends Component {
         total,
         overviewEntity,
       } = SearchStore.getState().search;
-      this.setState({
+      !this.unmounted && this.setState({
         entities,
         loading,
         limit,
@@ -131,7 +120,7 @@ export default class EntityListView extends Component {
   }
   parseUrlAndUpdateStore(nextProps) {
     let props = nextProps || this.props;
-    let queryObject = this.getQueryObject(props.location.query);
+    let queryObject = this.getQueryObject(queryString.parse(props.location.search));
     let pageSize = SearchStore.getState().search.limit;
     SearchStore.dispatch({
       type: SearchStoreActions.SETSORTFILTERSEARCHCURRENTPAGE,
@@ -151,13 +140,13 @@ export default class EntityListView extends Component {
     if (nextProps.currentPage !== searchState.currentPage) {
       // To enable explore fastaction on each card in entity list page.
       ExploreTablesStore.dispatch(
-       fetchTables(nextProps.params.namespace)
+       fetchTables(nextProps.match.params.namespace)
      );
     }
 
-    let queryObject = this.getQueryObject(nextProps.location.query);
+    let queryObject = this.getQueryObject(queryString.parse(nextProps.location.search));
     if (
-      (nextProps.params.namespace !== this.props.params.namespace) ||
+      (nextProps.match.params.namespace !== this.props.match.params.namespace) ||
       (
         !isEqual(queryObject.filters, searchState.activeFilters) ||
         queryObject.sort.fullSort !== searchState.activeSort.fullSort ||
@@ -167,11 +156,11 @@ export default class EntityListView extends Component {
         objectQuery(queryObject, 'overview', 'type') !== objectQuery(searchState, 'overviewEntity', 'type')
       )
     ) {
-      if ((nextProps.params.namespace !== this.props.params.namespace)) {
+      if ((nextProps.match.params.namespace !== this.props.match.params.namespace)) {
         NamespaceStore.dispatch({
           type: NamespaceActions.selectNamespace,
           payload: {
-            selectedNamespace: nextProps.params.namespace
+            selectedNamespace: nextProps.match.params.namespace
           }
         });
       }
@@ -192,6 +181,7 @@ export default class EntityListView extends Component {
     this.eventEmitter.off(globalEvents.STREAMCREATE, this.refreshSearchByCreationTime);
     this.eventEmitter.off(globalEvents.PUBLISHPIPELINE, this.refreshSearchByCreationTime);
     this.eventEmitter.off(globalEvents.ARTIFACTUPLOAD, this.refreshSearchByCreationTime);
+    this.unmounted = true;
   }
   refreshSearchByCreationTime() {
     let namespace = NamespaceStore.getState().selectedNamespace;
@@ -274,20 +264,22 @@ export default class EntityListView extends Component {
     this.retryCounter += 1;
     search();
   }
+  onFastActionSuccess(action) {
+    if (action === 'delete') {
+      this.onOverviewCloseAndRefresh();
+      updateQueryString();
+      return;
+    }
+    search();
+  }
   onOverviewCloseAndRefresh() {
-    this.setState({
+    !this.unmounted && this.setState({
       overview: false
     });
     SearchStore.dispatch({
       type: SearchStoreActions.RESETOVERVIEWENTITY
     });
     search();
-  }
-  dismissSplash() {
-    this.setState({
-      showSplash: true
-    });
-    this.parseUrlAndUpdateStore();
   }
   render() {
     let namespace = NamespaceStore.getState().selectedNamespace;
@@ -299,14 +291,6 @@ export default class EntityListView extends Component {
     let offset = searchState.search.offset;
     let {statusCode:errorStatusCode, message:errorMessage } = searchState.search.error;
     let errorContent;
-
-    if (!this.state.showSplash) {
-      return (
-        <WelcomeScreen
-          onClose={this.dismissSplash.bind(this)}
-        />
-      );
-    }
     if (this.state.namespaceNotFound) {
       return (
         <Page404
@@ -357,6 +341,7 @@ export default class EntityListView extends Component {
       }
     }
 
+
     return (
       <div>
         <EntityListHeader />
@@ -386,10 +371,11 @@ export default class EntityListView extends Component {
                   list={this.state.entities}
                   pageSize={this.state.limit}
                   showJustAddedSection={searchText === DEFAULT_SEARCH_QUERY}
-                  onFastActionSuccess={search}
+                  onFastActionSuccess={this.onFastActionSuccess.bind(this)}
                 />
             }
             <Overview
+              history={this.props.history}
               onCloseAndRefresh={this.onOverviewCloseAndRefresh.bind(this)}
             />
           </div>
@@ -400,9 +386,7 @@ export default class EntityListView extends Component {
 }
 
 EntityListView.propTypes = {
-  params: PropTypes.shape({
-    namespace : PropTypes.string
-  }),
+  match: PropTypes.object,
   location: PropTypes.object,
   history: PropTypes.object,
   pathname: PropTypes.string

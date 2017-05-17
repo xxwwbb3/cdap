@@ -12,17 +12,25 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
- */
+*/
 
 const DataPrepActions = {
   setData: 'DATAPREP_SET_DATA',
   setDirectives: 'DATAPREP_SET_DIRECTIVES',
   setWorkspace: 'DATAPREP_SET_WORKSPACE',
   setInitialized: 'DATAPREP_SET_INITIALIZED',
+  setSelectedHeaders: 'DATAPREP_SET_SELECTED_HEADERS',
   setHigherVersion: 'DATAPREP_SET_HIGHER_VERSION',
+  setWorkspaceMode: 'DATAPREP_SET_WORKSPACE_MODE',
   enableLoading: 'DATAPREP_ENABLE_LOADING',
   disableLoading: 'DATAPREP_DISABLE_LOADING',
-  reset: 'DATAPREP_RESET'
+  reset: 'DATAPREP_RESET',
+  setError: 'DATAPREP_SET_ERROR',
+  setCLIError: 'DATAPREP_CLI_ERROR',
+  dismissError: 'DATAPREP_DISMISS_ERROR',
+  setHighlightColumns: 'DATAPREP_SET_HIGHLIGHT_COLUMNS',
+  setColumnsInformation: 'DATAPREP_SET_COLUMNS_INFORMATION',
+  setWorkspaceList: 'DATAPREP_SET_WORKSPACE_LIST'
 };
 
 export default DataPrepActions;

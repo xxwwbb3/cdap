@@ -18,8 +18,14 @@ package co.cask.cdap.etl.proto;
 
 /**
  * Execution engines.
+ * @deprecated use {@link co.cask.cdap.etl.api.Engine} instead
  */
+@Deprecated
 public enum Engine {
   MAPREDUCE,
-  SPARK
+  SPARK;
+
+  public co.cask.cdap.etl.api.Engine toEngine() {
+    return co.cask.cdap.etl.api.Engine.valueOf(name());
+  }
 }

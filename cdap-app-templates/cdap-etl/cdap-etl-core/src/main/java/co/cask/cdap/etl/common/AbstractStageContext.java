@@ -16,16 +16,20 @@
 
 package co.cask.cdap.etl.common;
 
+import co.cask.cdap.api.ServiceDiscoverer;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.metrics.Metrics;
 import co.cask.cdap.api.plugin.PluginContext;
 import co.cask.cdap.api.plugin.PluginProperties;
+import co.cask.cdap.etl.api.Arguments;
 import co.cask.cdap.etl.api.StageContext;
 import co.cask.cdap.etl.api.StageMetrics;
-import co.cask.cdap.etl.log.LogContext;
+import co.cask.cdap.etl.common.plugin.Caller;
+import co.cask.cdap.etl.common.plugin.NoStageLoggingCaller;
 import co.cask.cdap.etl.planner.StageInfo;
 import com.google.common.base.Throwables;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -39,25 +43,32 @@ import javax.annotation.Nullable;
 public abstract class AbstractStageContext implements StageContext {
 
   private final PluginContext pluginContext;
+  private final ServiceDiscoverer serviceDiscoverer;
   private final String stageName;
   private final StageMetrics metrics;
   private final Map<String, Schema> inputSchemas;
   private final Schema inputSchema;
   private final Schema outputSchema;
+  private final Caller caller;
+  protected final BasicArguments arguments;
 
-  public AbstractStageContext(PluginContext pluginContext, Metrics metrics, StageInfo stageInfo) {
+  protected AbstractStageContext(PluginContext pluginContext, ServiceDiscoverer serviceDiscoverer, Metrics metrics,
+                                 StageInfo stageInfo, BasicArguments arguments) {
     this.pluginContext = pluginContext;
+    this.serviceDiscoverer = serviceDiscoverer;
     this.stageName = stageInfo.getName();
     this.metrics = new DefaultStageMetrics(metrics, stageName);
     this.outputSchema = stageInfo.getOutputSchema();
     this.inputSchemas = Collections.unmodifiableMap(stageInfo.getInputSchemas());
     // all plugins except joiners have just a single input schema
     this.inputSchema = inputSchemas.isEmpty() ? null : inputSchemas.values().iterator().next();
+    this.caller = NoStageLoggingCaller.wrap(Caller.DEFAULT);
+    this.arguments = arguments;
   }
 
   @Override
   public final PluginProperties getPluginProperties(final String pluginId) {
-    return LogContext.runWithoutLoggingUnchecked(new Callable<PluginProperties>() {
+    return caller.callUnchecked(new Callable<PluginProperties>() {
       @Override
       public PluginProperties call() throws Exception {
         return pluginContext.getPluginProperties(scopePluginId(pluginId));
@@ -68,7 +79,7 @@ public abstract class AbstractStageContext implements StageContext {
   @Override
   public final <T> T newPluginInstance(final String pluginId) throws InstantiationException {
     try {
-      return LogContext.runWithoutLogging(new Callable<T>() {
+      return caller.call(new Callable<T>() {
         @Override
         public T call() throws Exception {
           return pluginContext.newPluginInstance(scopePluginId(pluginId));
@@ -82,7 +93,7 @@ public abstract class AbstractStageContext implements StageContext {
 
   @Override
   public final <T> Class<T> loadPluginClass(final String pluginId) {
-    return LogContext.runWithoutLoggingUnchecked(new Callable<Class<T>>() {
+    return caller.callUnchecked(new Callable<Class<T>>() {
       @Override
       public Class<T> call() throws Exception {
         return pluginContext.loadPluginClass(scopePluginId(pluginId));
@@ -92,7 +103,7 @@ public abstract class AbstractStageContext implements StageContext {
 
   @Override
   public final PluginProperties getPluginProperties() {
-    return LogContext.runWithoutLoggingUnchecked(new Callable<PluginProperties>() {
+    return caller.callUnchecked(new Callable<PluginProperties>() {
       @Override
       public PluginProperties call() throws Exception {
         return pluginContext.getPluginProperties(stageName);
@@ -127,8 +138,24 @@ public abstract class AbstractStageContext implements StageContext {
     return outputSchema;
   }
 
+  @Override
+  public Arguments getArguments() {
+    return arguments;
+  }
+
   private String scopePluginId(String childPluginId) {
     return String.format("%s%s%s", stageName, Constants.ID_SEPARATOR, childPluginId);
   }
 
+  @Nullable
+  @Override
+  public URL getServiceURL(String applicationId, String serviceId) {
+    return serviceDiscoverer.getServiceURL(applicationId, serviceId);
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String serviceId) {
+    return serviceDiscoverer.getServiceURL(serviceId);
+  }
 }

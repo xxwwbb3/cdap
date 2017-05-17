@@ -18,11 +18,13 @@
 # Sitemap XML
 #
 # Generates a sitemap XML file for a web server.
+# V 0.2 adds a compare option to generate and count the number of unique files.
 #
-# version 0.1
+# version 0.2
 
 from optparse import OptionParser
 
+import hashlib
 import os
 import sys
 
@@ -49,7 +51,7 @@ DEFAULT_INPUT_DIRECTORY = os.path.abspath(os.path.join(SCRIPT_DIR_PATH, "../targ
 DEFAULT_OUTPUT_SITEMAP_XML_FILE = os.path.abspath(os.path.join(DEFAULT_INPUT_DIRECTORY, 'sitemap.xml'))
 
 SITEMAP_XML_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> 
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 %s</urlset>
 """
 
@@ -58,16 +60,34 @@ SITEMAP_URL_TEMPLATE = """<url>
 </url>
 """
 
+
+class FileURL:
+
+    def __init__(self, path='', base=''):
+        self.path = path
+        self.base = base
+        if self.path and self.base:
+            self.path_fragment = self.path[len(self.base):]
+        else:
+            self.path_fragment = None
+
+    def generate_md5(self):
+        if self.path:
+            self.md5_hash = hashlib.md5(open(self.path, 'rb').read()).hexdigest()
+        else:
+            self.md5_hash = None
+        return self.md5_hash
+
 def parse_options():
     """ Parses args options.
     """
-    
+
     description = """Reads either the default documentation directory
 (%(default_input)s) or a specified directory, walks the directory, generates a
-site-map.xml file, uses the CDAP version of either the default (%(default_version)s) or a
+sitemap.xml file, uses the CDAP version of either the default (%(default_version)s) or a
 specified version, and writes it to either the default (%(default_output)s) or a specified
-output.
-""" % {'default_input': DEFAULT_INPUT_DIRECTORY, 
+output. Also writes a 'current.xml' and 'develop.xml' version of the sitemap.xml.
+""" % {'default_input': DEFAULT_INPUT_DIRECTORY,
        'default_version': DEFAULT_CDAP_VERSION,
        'default_output': DEFAULT_OUTPUT_SITEMAP_XML_FILE,
        }
@@ -75,6 +95,13 @@ output.
     parser = OptionParser(
         usage="\n\n  %prog",
         description=description)
+
+    parser.add_option(
+        '-c', '--compare',
+        action="store_true",
+        dest='compare',
+        help="If True, creates MD5 hashes of each file, compares them, and counts the number of unique HTML files",
+        default=False)
 
     parser.add_option(
         '-i', '--input',
@@ -100,7 +127,7 @@ output.
     (options, args) = parser.parse_args()
 
     return options, args, parser
-    
+
 def build_sitemap(input):
     sitemap = []
     print "Using input directory: %s" % input
@@ -111,26 +138,34 @@ def build_sitemap(input):
         for name in files:
             if name.startswith('.') or name == 'sitemap.xml':
                 continue
-            sitemap.append(os.path.join(dirpath, name)[len(input):])
+            sitemap.append(FileURL(os.path.join(dirpath, name), input))
+            
     print "Files: %d" % len(sitemap)
     return sitemap
 
-def write_sitemap(sitemap, output, version):
+def write_sitemap(sitemap, output, version, compare=False):
     print "Using output file: %s" % output
     if not os.path.dirname(output):
         print "Output file parent directory does not exist: %s" % output
         return 1
-    
+
     sitemap_urls = ''
-    for path in sitemap:
-        sitemap_urls += SITEMAP_URL_TEMPLATE % ("http://docs.cask.co/cdap/%s%s" % (version, path))
+    unique_files = []
+    for fileURL in sitemap:
+        sitemap_urls += SITEMAP_URL_TEMPLATE % ("http://docs.cask.co/cdap/%s%s" % (version, fileURL.path_fragment))
+        if compare and fileURL.path.endswith('.html'):
+            md5_hash = fileURL.generate_md5()
+            if md5_hash not in unique_files:
+                unique_files.append(md5_hash)
     
     sitemap_xml = SITEMAP_XML_TEMPLATE % sitemap_urls
-    
+
     f = open(output, 'w')
     f.write(sitemap_xml)
     f.close()
     print "Wrote %d URLs to output file: %s" % (len(sitemap), output)
+    if compare:
+        print "Consisting of %d unique HTML files" % len(unique_files)
 
 #
 # Main function
@@ -140,18 +175,21 @@ def main():
     """ Main program entry point.
     """
     options, args, parser = parse_options()
-    
+
     if args:
         parser.print_help()
         sys.exit(1)
-        
+
     sitemap = build_sitemap(options.input)
-    
+
     if sitemap:
-        return_code = write_sitemap(sitemap, options.output, options.version)
+        return_code = write_sitemap(sitemap, options.output, options.version, options.compare)
+        for v in ('current', 'develop'):
+            if not return_code:
+                return_code = write_sitemap(sitemap, "%s.%s.xml" % (options.output, v), v, options.compare)
     else:
         return_code = 1
-        
+
     return return_code
 
 if __name__ == '__main__':

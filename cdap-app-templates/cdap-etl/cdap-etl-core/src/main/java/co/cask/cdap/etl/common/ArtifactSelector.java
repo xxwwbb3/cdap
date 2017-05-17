@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Cask Data, Inc.
+ * Copyright © 2016 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -21,39 +21,32 @@ import co.cask.cdap.api.artifact.ArtifactScope;
 import co.cask.cdap.api.artifact.ArtifactVersion;
 import co.cask.cdap.api.plugin.PluginClass;
 import co.cask.cdap.api.plugin.PluginSelector;
-import com.google.common.base.Preconditions;
+import co.cask.cdap.proto.artifact.ArtifactVersionRange;
 
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
  * Selects which plugin to use based on optional artifact scope, name, and version fields.
- * Will select the first artifact that matches all non-null fields.
- *
- * @deprecated use the ArtifactSelector from cdap-etl-proto instead
+ * Will select the greatest artifact that matches all non-null fields.
  */
-@Deprecated
 public class ArtifactSelector extends PluginSelector {
   private final ArtifactScope scope;
   private final String name;
-  private final ArtifactVersion version;
-  private final String pluginType;
-  private final String pluginName;
   private final String errMsg;
+  private final ArtifactVersionRange range;
 
   public ArtifactSelector(String pluginType,
                           String pluginName,
                           @Nullable ArtifactScope scope,
                           @Nullable String name,
-                          @Nullable ArtifactVersion version) {
-    Preconditions.checkArgument(scope != null || name != null || version != null,
-                                "Must specify an artifact scope, name, or version.");
+                          @Nullable ArtifactVersionRange range) {
     this.scope = scope;
     this.name = name;
-    this.version = version;
-    this.pluginType = pluginType;
-    this.pluginName = pluginName;
+    this.range = range;
     StringBuilder msg = new StringBuilder("Could not find an artifact that matches");
     if (scope != null) {
       msg.append(" scope ");
@@ -63,9 +56,8 @@ public class ArtifactSelector extends PluginSelector {
       msg.append(" name ");
       msg.append(name);
     }
-    if (version != null) {
-      msg.append(" version ");
-      msg.append(version.getVersion());
+    if (range != null) {
+      msg.append(range.getVersionString());
     }
     msg.append(" for plugin of type ");
     msg.append(pluginType);
@@ -76,15 +68,19 @@ public class ArtifactSelector extends PluginSelector {
 
   @Override
   public Map.Entry<ArtifactId, PluginClass> select(SortedMap<ArtifactId, PluginClass> plugins) {
-    if (plugins.isEmpty()) {
-      throw new IllegalArgumentException(String.format("No plugins of type %s and name %s were found.",
-                                                       pluginType, pluginName));
+    NavigableMap<ArtifactId, PluginClass> pluginMap;
+    if (plugins instanceof NavigableMap) {
+      pluginMap = (NavigableMap<ArtifactId, PluginClass>) plugins;
+    } else {
+      pluginMap = new TreeMap<>();
+      pluginMap.putAll(plugins);
     }
-    for (Map.Entry<ArtifactId, PluginClass> entry : plugins.entrySet()) {
+
+    for (Map.Entry<ArtifactId, PluginClass> entry : pluginMap.descendingMap().entrySet()) {
       ArtifactId artifactId = entry.getKey();
       if ((scope == null || artifactId.getScope().equals(scope)) &&
         (name == null || artifactId.getName().equals(name)) &&
-        (version == null || artifactId.getVersion().equals(version))) {
+        (range == null || range.versionIsInRange(artifactId.getVersion()))) {
         return entry;
       }
     }

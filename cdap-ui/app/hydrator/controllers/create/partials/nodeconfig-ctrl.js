@@ -15,7 +15,7 @@
  */
 
 class HydratorPlusPlusNodeConfigCtrl {
-  constructor($scope, $timeout, $state, HydratorPlusPlusPluginConfigFactory, EventPipe, GLOBALS, HydratorPlusPlusConfigActions, myHelpers, NonStorePipelineErrorFactory, $uibModal, HydratorPlusPlusConfigStore, rPlugin, rDisabled, HydratorPlusPlusHydratorService, myPipelineApi, HydratorPlusPlusPreviewStore, rIsStudioMode, HydratorPlusPlusOrderingFactory, avsc) {
+  constructor($scope, $timeout, $state, HydratorPlusPlusPluginConfigFactory, EventPipe, GLOBALS, HydratorPlusPlusConfigActions, myHelpers, NonStorePipelineErrorFactory, $uibModal, HydratorPlusPlusConfigStore, rPlugin, rDisabled, HydratorPlusPlusHydratorService, myPipelineApi, HydratorPlusPlusPreviewStore, rIsStudioMode, HydratorPlusPlusOrderingFactory, avsc, LogViewerStore) {
     'ngInject';
     this.$scope = $scope;
     this.$timeout = $timeout;
@@ -36,6 +36,7 @@ class HydratorPlusPlusNodeConfigCtrl {
     this.previewStore = HydratorPlusPlusPreviewStore;
     this.HydratorPlusPlusOrderingFactory = HydratorPlusPlusOrderingFactory;
     this.avsc = avsc;
+    this.LogViewerStore = LogViewerStore;
     this.setDefaults(rPlugin);
     this.tabs = [
       {
@@ -60,11 +61,11 @@ class HydratorPlusPlusNodeConfigCtrl {
     if (rIsStudioMode && this.isPreviewMode) {
       this.previewLoading = false;
       this.previewData = null;
+      this.previewStatus = null;
       this.fetchPreview();
     }
 
-    this.activeTab = this.isPreviewMode ? 2 : 1;
-
+    this.activeTab = this.isPreviewMode && !rPlugin.isAction ? 2 : 1;
 
     // Timeouts
     this.setStateTimeout = null;
@@ -127,7 +128,7 @@ class HydratorPlusPlusNodeConfigCtrl {
       schemaAdvance: false
     };
 
-    if (this.state.isSink && this.state.node.outputSchema && this.state.node.outputSchema.length > 0) {
+    if (this.state.node.outputSchema && this.state.node.outputSchema.length > 0) {
       try {
         this.avsc.parse(this.state.node.outputSchema);
       } catch (e) {
@@ -144,7 +145,7 @@ class HydratorPlusPlusNodeConfigCtrl {
     const noJsonErrorHandler = (err) => {
       var propertiesFromBackend = Object.keys(this.state.node._backendProperties);
       // Didn't receive a configuration from the backend. Fallback to all textboxes.
-      switch(err) {
+      switch (err) {
         case 'NO_JSON_FOUND':
           this.state.noConfigMessage = this.GLOBALS.en.hydrator.studio.info['NO-CONFIG'];
           break;
@@ -188,9 +189,8 @@ class HydratorPlusPlusNodeConfigCtrl {
         .then(
           (res) => {
             try {
-              this.state.groupsConfig = this.HydratorPlusPlusPluginConfigFactory
-                .generateNodeConfig(this.state.node._backendProperties, res);
-            } catch(e) {
+              this.state.groupsConfig = this.HydratorPlusPlusPluginConfigFactory.generateNodeConfig(this.state.node._backendProperties, res);
+            } catch (e) {
               noJsonErrorHandler();
               return;
             }
@@ -218,11 +218,31 @@ class HydratorPlusPlusNodeConfigCtrl {
             }
             angular.forEach(this.state.groupsConfig.groups, (group) => {
               angular.forEach(group.fields, (field) => {
+                field.errorTooltip = '\'' + field.label + '\' is a required field';
                 if (field.defaultValue) {
-                  this.state.node.plugin.properties[field.name] = this.state.node.plugin.properties[field.name] || field.defaultValue;
+                  this.state.node.plugin.properties[field.name] = this.state.node.plugin.properties[field.name] || field['widget-attributes'].default;
                 }
               });
             });
+            let listOfFields = _.flatten(this.state.groupsConfig.groups.map(group => group.fields));
+            this.emptyHiddenFields = listOfFields
+              .filter(field => {
+                var defaultValue = this.myHelpers.objectQuery(field, 'widget-attributes', 'default');
+                var widgetType = field['widget-type'];
+                var isEmpty = function isEmpty(v) {
+                  return _.isUndefined(v) || _.isNull(v) || _.isEmpty(v);
+                };
+                let requiredFields = _.values(this.state.node._backendProperties, function (field) {
+                    return field;
+                  }).filter(function (field) {
+                    return field.required;
+                  }).map(function (field) {
+                    return field.name;
+                  });
+                return requiredFields.indexOf(field.name) !== -1 && widgetType === 'hidden' && isEmpty(defaultValue);
+              })
+              .map(field => '"' + field.name + '"');
+
             var configOutputSchema = this.state.groupsConfig.outputSchema;
             // If its an implicit schema, set the output schema to the implicit schema and inform ConfigActionFactory
             if (configOutputSchema.implicitSchema) {
@@ -243,7 +263,7 @@ class HydratorPlusPlusNodeConfigCtrl {
                 }
                 this.state.watchers.push(
                   this.$scope.$watch('HydratorPlusPlusNodeConfigCtrl.state.node.outputSchema', () => {
-                    if(this.validateSchema()) {
+                    if (this.validateSchema()) {
                       this.state.node.plugin.properties[configOutputSchema.outputSchemaProperty[0]] = this.state.node.outputSchema;
                     }
                   })
@@ -381,6 +401,11 @@ class HydratorPlusPlusNodeConfigCtrl {
             }
           }
         });
+        let logViewerState = this.LogViewerStore.getState();
+        if (logViewerState.statusInfo) {
+          // TODO: Move preview status state info HydratorPlusPlusPreviewStore, then get from there
+          this.previewStatus = logViewerState.statusInfo.status;
+        }
         this.previewLoading = false;
       }, () => {
         this.previewLoading = false;

@@ -15,6 +15,7 @@
 */
 import React, {PropTypes} from 'react';
 import PlusButtonStore from 'services/PlusButtonStore';
+import IconSVG from 'components/IconSVG';
 import classnames from 'classnames';
 
 require('./ResourceCenterEntity.scss');
@@ -33,8 +34,13 @@ export default function ResourceCenterEntity({className, iconClassName, title, d
       <div className="image-button-container">
         {
           iconClassName ?
-            <div className={classnames("entity-image", iconClassName)}/> :
-            <div className="entity-image empty"></div>
+            (
+              <div className="entity-image">
+                <IconSVG name={iconClassName} />
+              </div>
+            )
+          :
+            <div className="entity-image empty" />
         }
         {
           actionLink ?
@@ -52,6 +58,7 @@ export default function ResourceCenterEntity({className, iconClassName, title, d
           :
             (
               <button
+                id={(actionLabel + "-" + title).toLowerCase()}
                 className={classnames("btn btn-primary")}
                 onClick={onClick}
                 disabled={disabled}

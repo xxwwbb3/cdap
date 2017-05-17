@@ -23,8 +23,10 @@ import co.cask.cdap.api.security.store.SecureStoreData;
 import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.action.ActionContext;
 import co.cask.cdap.etl.api.action.SettableArguments;
+import co.cask.cdap.etl.mock.common.MockArguments;
 import co.cask.cdap.proto.id.NamespaceId;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,7 +41,7 @@ public class MockActionContext implements ActionContext {
   private SettableArguments settableArguments;
 
   public MockActionContext() {
-    this.settableArguments = new MockSettableArguments(new HashMap<String, String>());
+    this.settableArguments = new MockArguments();
   }
 
   @Override
@@ -99,6 +101,20 @@ public class MockActionContext implements ActionContext {
     return null;
   }
 
+  @Nullable
+  @Override
+  public URL getServiceURL(String applicationId, String serviceId) {
+    // no-op
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String serviceId) {
+    //no-op
+    return null;
+  }
+
   @Override
   public String getNamespace() {
     return NamespaceId.DEFAULT.getNamespace();
@@ -135,43 +151,5 @@ public class MockActionContext implements ActionContext {
     // no-op; unused
   }
 
-  /**
-   * SettableArguments class for MockActionContext.
-   */
-  private static class MockSettableArguments implements SettableArguments {
-    private final Map<String, String> options;
-
-    private MockSettableArguments(Map<String, String> arguments) {
-      options = new HashMap<>();
-      for (Map.Entry<String, String> argument : arguments.entrySet()) {
-        options.put(argument.getKey(), argument.getValue());
-      }
-    }
-
-    @Override
-    public boolean has(String name) {
-      return options.containsKey(name);
-    }
-
-    @Override
-    public String get(String name) {
-      return options.get(name);
-    }
-
-    @Override
-    public void set(String name, String value) {
-      options.put(name, value);
-    }
-
-    @Override
-    public Map<String, String> asMap() {
-      return options;
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      return options.entrySet().iterator();
-    }
-  }
 }
 

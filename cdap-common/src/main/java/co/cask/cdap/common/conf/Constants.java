@@ -55,6 +55,8 @@ public final class Constants {
   public static final String INSTANCE_NAME = "instance.name";
   // Environment variable name for spark home
   public static final String SPARK_HOME = "SPARK_HOME";
+  // Environment variable name for spark compat version
+  public static final String SPARK_COMPAT_ENV = "SPARK_COMPAT";
   // Environment variable for TEZ home
   public static final String TEZ_HOME = "TEZ_HOME";
 
@@ -161,6 +163,7 @@ public final class Constants {
     public static final String SYSTEM_ARTIFACTS_DIR = "app.artifact.dir";
     public static final String PROGRAM_EXTRA_CLASSPATH = "app.program.extra.classpath";
     public static final String SPARK_YARN_CLIENT_REWRITE = "app.program.spark.yarn.client.rewrite.enabled";
+    public static final String SPARK_COMPAT = "app.program.spark.compat";
     public static final String RUNTIME_EXT_DIR = "app.program.runtime.extensions.dir";
     public static final String PROGRAM_MAX_START_SECONDS = "app.program.max.start.seconds";
     public static final String PROGRAM_MAX_STOP_SECONDS = "app.program.max.stop.seconds";
@@ -177,6 +180,7 @@ public final class Constants {
     public static final int DEFAULT_EXEC_THREADS = 20;
     public static final int DEFAULT_BOSS_THREADS = 1;
     public static final int DEFAULT_WORKER_THREADS = 10;
+    public static final boolean DEFAULT_APP_UPDATE_SCHEDULES = true;
 
     /**
      * Query parameter to indicate start time.
@@ -215,6 +219,8 @@ public final class Constants {
      * added to classpaths of CDAP programs.
      */
     public static final String PROGRAM_CONTAINER_DIST_JARS = "program.container.dist.jars";
+
+    public static final String APP_UPDATE_SCHEDULES = "app.deploy.update.schedules";
   }
 
   /**
@@ -515,6 +521,8 @@ public final class Constants {
     public static final String MEMORY_MB = "metrics.memory.mb";
     public static final String MAX_INSTANCES = "metrics.max.instances";
     public static final String SERVICE_DESCRIPTION = "Service to handle metrics requests.";
+    public static final String PROCESSOR_MAX_DELAY_MS = "metrics.processor.max.delay.ms";
+    public static final String QUEUE_SIZE = "metrics.processor.queue.size";
 
     public static final String ENTITY_TABLE_NAME = "metrics.data.entity.tableName";
     public static final String METRICS_TABLE_PREFIX = "metrics.data.table.prefix";
@@ -541,7 +549,6 @@ public final class Constants {
     public static final int DEFAULT_KAFKA_CONSUMER_PERSIST_THRESHOLD = 100;
 
     public static final String MESSAGING_TOPIC_NUM = "metrics.messaging.topic.num";
-    public static final String MESSAGING_FETCHER_LIMIT = "metrics.messaging.fetcher.limit";
 
     public static final Map<String, String> METRICS_PROCESSOR_CONTEXT =
       ImmutableMap.of(Constants.Metrics.Tag.NAMESPACE, NamespaceId.SYSTEM.getNamespace(),
@@ -604,7 +611,9 @@ public final class Constants {
       public static final String PRODUCER = "pr";
       public static final String CONSUMER = "co";
 
+      // For TMS
       public static final String TABLE = "tbl";
+      public static final String TOPIC = "tpc";
     }
 
     /**
@@ -1170,6 +1179,8 @@ public final class Constants {
     public static final String LOCAL_DATA_DIR = "messaging.local.data.dir";
     public static final String LOCAL_DATA_CLEANUP_FREQUENCY = "messaging.local.data.cleanup.frequency.secs";
 
+    public static final String CACHE_SIZE_MB = "messaging.cache.size.mb";
+
     public static final String HBASE_MAX_SCAN_THREADS = "messaging.hbase.max.scan.threads";
     public static final String HBASE_SCAN_CACHE_ROWS = "messaging.hbase.scan.cache.rows";
     public static final String METADATA_TABLE_NAME = "messaging.metadata.table.name";
@@ -1252,6 +1263,7 @@ public final class Constants {
     public static final String SERVICE_PREFIX = "service.";
     public static final String FLOW_PREFIX = "flow.";
     public static final int RUN_RECORD_UPDATE_RETRY_DELAY_SECS = 5;
+    public static final int LOCAL_DATASET_OPERATION_RETRY_DELAY_SECONDS = 5;
   }
 
   /**
@@ -1259,5 +1271,12 @@ public final class Constants {
    */
   public static final class HBaseDDLExecutor {
     public static final String EXTENSIONS_DIR = "hbase.ddlexecutor.extension.dir";
+  }
+
+  /**
+   * Constants for upgrade tool.
+   */
+  public static final class Upgrade {
+    public static final String UPGRADE_THREAD_POOL_SIZE = "upgrade.thread.pool.size";
   }
 }

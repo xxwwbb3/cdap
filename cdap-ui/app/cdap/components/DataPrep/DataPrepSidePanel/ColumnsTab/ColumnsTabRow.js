@@ -15,6 +15,8 @@
  */
 
 import React, { Component, PropTypes } from 'react';
+import {preventPropagation} from 'services/helpers';
+import isEqual from 'lodash/isEqual';
 import classnames from 'classnames';
 
 export default class ColumnsTabRow extends Component {
@@ -22,117 +24,84 @@ export default class ColumnsTabRow extends Component {
     super(props);
 
     this.state = {
-      expanded: false
+      selected: props.selected,
+      rowInfo: props.rowInfo,
+      columnName: props.columnName,
+      showTypes: false
     };
 
-    this.toggleRowExpand = this.toggleRowExpand.bind(this);
+    this.toggleRowSelect = this.toggleRowSelect.bind(this);
   }
 
-  toggleRowExpand() {
-    if (!this.state.expanded) {
-      let elem = document.getElementById(`column-${this.props.columnName}`);
+  componentWillReceiveProps(nextProps) {
+    let selectedChange = nextProps.selected !== this.state.selected;
+    let columnNameChange = nextProps.columnName !== this.state.columnName;
+    let rowInfoChange = !isEqual(nextProps.rowInfo, this.state.rowInfo);
+    if (selectedChange || columnNameChange || rowInfoChange) {
+      this.setState({
+        columnName: nextProps.columnName,
+        rowInfo: nextProps.rowInfo,
+        selected: nextProps.selected
+      });
+    }
+  }
+
+  toggleRowSelect(e) {
+    let newState = !this.state.selected;
+    let elem = document.getElementById(`column-${this.props.columnName}`);
+    if (newState) {
       elem.scrollIntoView();
-
-      elem.classList.add('selected');
-
-      setTimeout(() => {
-        elem.classList.remove('selected');
-      }, 3000);
     }
 
-    this.setState({expanded: !this.state.expanded});
-  }
-
-  renderTypesTable() {
-    let types = this.props.rowInfo.types;
-    if (!types) { return; }
-
-    let headers = Object.keys(types);
-
-    return (
-      <div className="types-table-container">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Inferred Type</th>
-              <th>% Chance</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {
-              headers.map((head) => {
-                return (
-                  <tr key={head}>
-                    <td>{head}</td>
-                    <td>{types[head]}</td>
-                  </tr>
-                );
-              })
-            }
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  renderExpanded() {
-    if (!this.state.expanded) { return null; }
-
-    let generalInfo = this.props.rowInfo.general;
-
-    let nonNull = generalInfo['non-null'] || 0,
-        nullCell = generalInfo['null'] || 0,
-        empty = generalInfo['empty'] || 0;
-
-    let filled = nonNull - empty;
-
-    return (
-      <div className="expanded-row">
-        <div className="quality-bar">
-          <span
-            className="filled"
-            style={{width: `${filled}%`}}
-          />
-
-          <span
-            className="empty"
-            style={{width: `${empty}%`}}
-          />
-
-          <span
-            className="null-cell"
-            style={{width: `${nullCell}%`}}
-          />
-        </div>
-
-        {this.renderTypesTable()}
-
-      </div>
-    );
+    this.setState({selected: newState});
+    preventPropagation(e);
+    this.props.setSelect(this.props.columnName, newState);
   }
 
   render() {
-    return (
-      <div className="columns-tab-row">
-        <div
-          className={classnames('row-header', {
-            'expanded': this.state.expanded,
-            'invalid': !this.props.rowInfo.isValid
-          })}
-          onClick={this.toggleRowExpand}
-        >
-          {this.props.index + 1}. {this.props.columnName}
-        </div>
+    let rowInfo = this.props.rowInfo || {};
+    let general = rowInfo.general || {};
+    let {empty: empty=0, null: nullValues=0, 'non-null': nonEmpty=100} = general;
 
-        {this.renderExpanded()}
-      </div>
+    let nonNull = Math.ceil(nonEmpty - (empty + nullValues));
+    return (
+      <tr
+        className={classnames({
+          'selected': this.state.selected
+        })}
+        onClick={this.props.onShowDetails}
+      >
+        <td>
+          <span
+            onClick={this.toggleRowSelect}
+            className={classnames('fa row-header-checkbox', {
+              'fa-square-o': !this.state.selected,
+              'fa-check-square': this.state.selected
+            })}
+          />
+        </td>
+        <td>
+          <span>
+            {this.props.index + 1}
+          </span>
+        </td>
+        <td>
+          {this.props.columnName}
+        </td>
+        <td>
+          <span className="text-success">
+            {`${nonNull}%`}
+          </span>
+        </td>
+      </tr>
     );
   }
 }
-
 ColumnsTabRow.propTypes = {
   rowInfo: PropTypes.object,
+  onShowDetails: PropTypes.func,
   index: PropTypes.number,
-  columnName: PropTypes.string
+  columnName: PropTypes.string,
+  selected: PropTypes.bool,
+  setSelect: PropTypes.func
 };

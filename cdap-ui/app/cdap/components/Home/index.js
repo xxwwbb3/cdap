@@ -14,8 +14,7 @@
  * the License.
  */
 import React, {PropTypes, Component} from 'react';
-import Match from 'react-router/Match';
-import Miss from 'react-router/Miss';
+import {Route, Switch} from 'react-router-dom';
 import Page404 from 'components/404';
 import EntityListView from 'components/EntityListView';
 import AppDetailedView from 'components/AppDetailedView';
@@ -24,25 +23,32 @@ import StreamDetailedView from 'components/StreamDetailedView';
 import NamespaceStore from 'services/NamespaceStore';
 import NamespaceActions from 'services/NamespaceStore/NamespaceActions';
 import DataPrepHome from 'components/DataPrepHome';
+import FileBrowser from 'components/FileBrowser';
+import DataPrepConnections from 'components/DataPrepConnections';
 
 export default class Home extends Component {
   componentWillMount() {
     NamespaceStore.dispatch({
       type: NamespaceActions.selectNamespace,
       payload: {
-        selectedNamespace: this.props.params.namespace
+        selectedNamespace: this.props.match.params.namespace
       }
     });
   }
   render() {
     return (
       <div>
-        <Match exactly pattern="/ns/:namespace" component={EntityListView} />
-        <Match pattern="/ns/:namespace/apps/:appId" component={AppDetailedView} />
-        <Match pattern="/ns/:namespace/datasets/:datasetId" component={DatasetDetailedView} />
-        <Match pattern="/ns/:namespace/streams/:streamId" component={StreamDetailedView} />
-        <Match pattern="/ns/:namespace/dataprep" component={DataPrepHome} />
-        <Miss component={Page404} />
+        <Switch>
+          <Route exact path="/ns/:namespace" component={EntityListView} />
+          <Route path="/ns/:namespace/apps/:appId" component={AppDetailedView} />
+          <Route path="/ns/:namespace/datasets/:datasetId" component={DatasetDetailedView} />
+          <Route path="/ns/:namespace/streams/:streamId" component={StreamDetailedView} />
+          <Route exact path="/ns/:namespace/dataprep" component={DataPrepHome} />
+          <Route exact path="/ns/:namespace/dataprep/:workspaceId" component={DataPrepHome} />
+          <Route path="/ns/:namespace/file" component={FileBrowser} />
+          <Route path="/ns/:namespace/connections" component={DataPrepConnections} />
+          <Route component={Page404} />
+        </Switch>
       </div>
     );
   }
@@ -51,5 +57,6 @@ export default class Home extends Component {
 Home.propTypes = {
   params: PropTypes.shape({
     namespace : PropTypes.string
-  })
+  }),
+  match: PropTypes.object
 };

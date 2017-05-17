@@ -21,6 +21,7 @@ import co.cask.cdap.etl.api.realtime.RealtimeSink;
 import co.cask.cdap.etl.api.realtime.RealtimeSource;
 import co.cask.cdap.etl.proto.Connection;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -34,9 +35,12 @@ public final class ETLRealtimeConfig extends ETLConfig {
                             Set<Connection> connections,
                             Resources resources,
                             boolean stageLoggingEnabled,
+                            boolean processTimingEnabled,
                             int instances,
-                            int numOfRecordsPreview) {
-    super(stages, connections, resources, resources, resources, stageLoggingEnabled, numOfRecordsPreview);
+                            int numOfRecordsPreview,
+                            Map<String, String> properties) {
+    super(stages, connections, resources, resources, resources, stageLoggingEnabled, processTimingEnabled,
+          numOfRecordsPreview, properties);
     this.instances = instances;
   }
 
@@ -110,7 +114,8 @@ public final class ETLRealtimeConfig extends ETLConfig {
     }
 
     public ETLRealtimeConfig build() {
-      return new ETLRealtimeConfig(stages, connections, resources, stageLoggingEnabled, instances, numOfRecordsPreview);
+      return new ETLRealtimeConfig(stages, connections, resources, stageLoggingEnabled, processTimingEnabled,
+                                   instances, numOfRecordsPreview, properties);
     }
   }
 }

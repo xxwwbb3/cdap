@@ -78,6 +78,7 @@ import org.apache.twill.kafka.client.KafkaClientService;
 import org.apache.twill.zookeeper.ZKClientService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.Closeable;
 import java.io.File;
@@ -148,6 +149,9 @@ public abstract class AbstractProgramTwillRunnable<T extends ProgramRunner> impl
   public void initialize(TwillContext context) {
     Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler());
     System.setSecurityManager(new RunnableSecurityManager(System.getSecurityManager()));
+
+    // Install the JUL to SLF4J Bridge
+    SLF4JBridgeHandler.install();
 
     runLatch = new CountDownLatch(1);
     coreServices = new ArrayList<>();
@@ -321,7 +325,7 @@ public abstract class AbstractProgramTwillRunnable<T extends ProgramRunner> impl
 
     try {
       state.get();
-      LOG.info("Program {} stopped.", name);
+      LOG.debug("Program {} stopped.", name);
     } catch (InterruptedException e) {
       LOG.warn("Program {} interrupted.", name, e);
     } catch (ExecutionException e) {
@@ -341,7 +345,7 @@ public abstract class AbstractProgramTwillRunnable<T extends ProgramRunner> impl
 
   @Override
   public void destroy() {
-    LOG.info("Releasing resources: {}", name);
+    LOG.debug("Releasing resources: {}", name);
     try {
       if (program != null) {
         Closeables.closeQuietly(program);
@@ -351,7 +355,7 @@ public abstract class AbstractProgramTwillRunnable<T extends ProgramRunner> impl
       Futures.getUnchecked(
         Services.chainStop(services.get(0),
                            services.subList(1, services.size()).toArray(new Service[services.size() - 1])));
-      LOG.info("Runnable stopped: {}", name);
+      LOG.debug("Runnable stopped: {}", name);
     } finally {
       if (logAppenderInitializer != null) {
         logAppenderInitializer.close();

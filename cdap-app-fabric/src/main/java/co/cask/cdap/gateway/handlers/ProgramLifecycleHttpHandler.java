@@ -50,6 +50,8 @@ import co.cask.cdap.internal.app.runtime.flow.FlowUtils;
 import co.cask.cdap.internal.app.runtime.schedule.SchedulerException;
 import co.cask.cdap.internal.app.services.ProgramLifecycleService;
 import co.cask.cdap.internal.app.store.RunRecordMeta;
+import co.cask.cdap.internal.schedule.StreamSizeSchedule;
+import co.cask.cdap.internal.schedule.TimeSchedule;
 import co.cask.cdap.proto.BatchProgram;
 import co.cask.cdap.proto.BatchProgramResult;
 import co.cask.cdap.proto.BatchProgramStart;
@@ -67,8 +69,8 @@ import co.cask.cdap.proto.ProgramRunStatus;
 import co.cask.cdap.proto.ProgramStatus;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.RunRecord;
+import co.cask.cdap.proto.ScheduleUpdateDetail;
 import co.cask.cdap.proto.ServiceInstances;
-import co.cask.cdap.proto.codec.ScheduleSpecificationCodec;
 import co.cask.cdap.proto.id.ApplicationId;
 import co.cask.cdap.proto.id.FlowId;
 import co.cask.cdap.proto.id.NamespaceId;
@@ -141,7 +143,6 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
   private static final Gson GSON = ApplicationSpecificationAdapter
     .addTypeAdapters(new GsonBuilder())
     .registerTypeAdapterFactory(new CaseInsensitiveEnumTypeAdapterFactory())
-    .registerTypeAdapter(ScheduleSpecification.class, new ScheduleSpecificationCodec())
     .create();
 
   private static final Function<RunRecordMeta, RunRecord> CONVERT_TO_RUN_RECORD =
@@ -484,13 +485,8 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
                                     @PathParam("program-name") String programName) throws BadRequestException,
     NotImplementedException, NotFoundException, UnauthorizedException {
     ProgramType programType = getProgramType(type);
-    if (programType == null || programType == ProgramType.WEBAPP) {
-      throw new NotFoundException(String.format("Getting program runtime arguments is not supported for program " +
-                                                  "type '%s'.", type));
-    }
-
-    responder.sendJson(HttpResponseStatus.OK,
-                       lifecycleService.getRuntimeArgs(new ProgramId(namespaceId, appName, programType, programName)));
+    ProgramId programId = new ProgramId(namespaceId, appName, programType, programName);
+    getProgramIdRuntimeArgs(programId, responder);
   }
 
   /**
@@ -505,13 +501,62 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
                                     @PathParam("program-type") String type,
                                     @PathParam("program-name") String programName) throws Exception {
     ProgramType programType = getProgramType(type);
+    ProgramId programId = new ProgramId(namespaceId, appName, programType, programName);
+    saveProgramIdRuntimeArgs(programId, request, responder);
+  }
+
+  /**
+   * Get runtime args of a program with app version.
+   */
+  @GET
+  @Path("/apps/{app-name}/versions/{app-version}/{program-type}/{program-name}/runtimeargs")
+  public void getProgramRuntimeArgs(HttpRequest request, HttpResponder responder,
+                                    @PathParam("namespace-id") String namespaceId,
+                                    @PathParam("app-name") String appName,
+                                    @PathParam("app-version") String appVersion,
+                                    @PathParam("program-type") String type,
+                                    @PathParam("program-name") String programName) throws BadRequestException,
+    NotImplementedException, NotFoundException, UnauthorizedException {
+    ProgramType programType = getProgramType(type);
+    ProgramId programId = new ApplicationId(namespaceId, appName, appVersion).program(programType, programName);
+    getProgramIdRuntimeArgs(programId, responder);
+  }
+
+  /**
+   * Save runtime args of program with app version.
+   */
+  @PUT
+  @Path("/apps/{app-name}/versions/{app-version}/{program-type}/{program-name}/runtimeargs")
+  @AuditPolicy(AuditDetail.REQUEST_BODY)
+  public void saveProgramRuntimeArgs(HttpRequest request, HttpResponder responder,
+                                     @PathParam("namespace-id") String namespaceId,
+                                     @PathParam("app-name") String appName,
+                                     @PathParam("app-version") String appVersion,
+                                     @PathParam("program-type") String type,
+                                     @PathParam("program-name") String programName) throws Exception {
+    ProgramType programType = getProgramType(type);
+    ProgramId programId = new ApplicationId(namespaceId, appName, appVersion).program(programType, programName);
+    saveProgramIdRuntimeArgs(programId, request, responder);
+  }
+
+  private void getProgramIdRuntimeArgs(ProgramId programId, HttpResponder responder) throws BadRequestException,
+    NotImplementedException, NotFoundException, UnauthorizedException {
+    ProgramType programType = programId.getType();
+    if (programType == null || programType == ProgramType.WEBAPP) {
+      throw new NotFoundException(String.format("Getting program runtime arguments is not supported for program " +
+                                                  "type '%s'.", programType));
+    }
+    responder.sendJson(HttpResponseStatus.OK, lifecycleService.getRuntimeArgs(programId));
+  }
+
+  private void saveProgramIdRuntimeArgs(ProgramId programId, HttpRequest request,
+                                       HttpResponder responder) throws Exception {
+    ProgramType programType = programId.getType();
     if (programType == null || programType == ProgramType.WEBAPP) {
       throw new NotFoundException(String.format("Saving program runtime arguments is not supported for program " +
                                                   "type '%s'.", programType));
     }
-
-    lifecycleService.saveRuntimeArgs(new ProgramId(namespaceId, appName, programType, programName),
-                                     decodeArguments(request));
+    lifecycleService.saveRuntimeArgs(programId, decodeArguments(request));
     responder.sendStatus(HttpResponseStatus.OK);
   }
 
@@ -544,6 +589,61 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
       throw new NotFoundException(programId);
     }
     responder.sendJson(HttpResponseStatus.OK, specification);
+  }
+
+  @GET
+  @Path("apps/{app-name}/schedules/{schedule-name}")
+  public void getSchedule(HttpRequest request, HttpResponder responder,
+                          @PathParam("namespace-id") String namespaceId,
+                          @PathParam("app-name") String appName,
+                          @PathParam("schedule-name") String scheduleName)
+    throws NotFoundException, SchedulerException {
+    doGetSchedule(responder, namespaceId, appName, ApplicationId.DEFAULT_VERSION, scheduleName);
+  }
+
+  @GET
+  @Path("apps/{app-name}/versions/{app-version}/schedules/{schedule-name}")
+  public void getSchedule(HttpRequest request, HttpResponder responder,
+                          @PathParam("namespace-id") String namespaceId,
+                          @PathParam("app-name") String appName,
+                          @PathParam("app-version") String appVersion,
+                          @PathParam("schedule-name") String scheduleName)
+    throws NotFoundException, SchedulerException {
+    doGetSchedule(responder, namespaceId, appName, appVersion, scheduleName);
+  }
+
+  private void doGetSchedule(HttpResponder responder, String namespaceId, String appName,
+                             String appVersion, String scheduleName) throws NotFoundException {
+    ApplicationId applicationId = new ApplicationId(namespaceId, appName, appVersion);
+    ScheduleSpecification specification = lifecycleService.getSchedule(applicationId, scheduleName);
+    responder.sendJson(HttpResponseStatus.OK, specification, ScheduleSpecification.class, GSON);
+  }
+
+  @GET
+  @Path("apps/{app-name}/schedules")
+  public void getAllSchedules(HttpRequest request, HttpResponder responder,
+                              @PathParam("namespace-id") String namespaceId,
+                              @PathParam("app-name") String appName)
+    throws NotFoundException, SchedulerException {
+    doGetAllSchedules(responder, namespaceId, appName, ApplicationId.DEFAULT_VERSION);
+  }
+
+  @GET
+  @Path("apps/{app-name}/versions/{app-version}/schedules")
+  public void getAllSchedules(HttpRequest request, HttpResponder responder,
+                              @PathParam("namespace-id") String namespaceId,
+                              @PathParam("app-name") String appName,
+                              @PathParam("app-version") String appVersion)
+    throws NotFoundException, SchedulerException {
+    doGetAllSchedules(responder, namespaceId, appName, appVersion);
+  }
+
+  private void doGetAllSchedules(HttpResponder responder, String namespaceId, String appName,
+                                 String appVersion) throws NotFoundException {
+    ApplicationId applicationId = new ApplicationId(namespaceId, appName, appVersion);
+    List<ScheduleSpecification> specification = lifecycleService.getAllSchedules(applicationId);
+    Type scheduleSpecsType = new TypeToken<List<ScheduleSpecification>>() { }.getType();
+    responder.sendJson(HttpResponseStatus.OK, specification, scheduleSpecsType, GSON);
   }
 
   @PUT
@@ -593,8 +693,31 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
           scheduleSpecFromRequest.getSchedule().getName(), scheduleName));
     }
 
+    if (scheduleSpecFromRequest.getSchedule().getName() == null) {
+      scheduleSpecFromRequest = addNameToSpec(scheduleSpecFromRequest, scheduleName);
+    }
+
     lifecycleService.addSchedule(applicationId, scheduleSpecFromRequest);
     responder.sendStatus(HttpResponseStatus.OK);
+  }
+
+  private ScheduleSpecification addNameToSpec(ScheduleSpecification scheduleSpecification, String name)
+    throws BadRequestException {
+    if (scheduleSpecification.getSchedule() instanceof TimeSchedule) {
+      TimeSchedule ts = (TimeSchedule) scheduleSpecification.getSchedule();
+      return new ScheduleSpecification(
+        new TimeSchedule(name, ts.getDescription(), ts.getCronEntry(), ts.getRunConstraints()),
+        scheduleSpecification.getProgram(), scheduleSpecification.getProperties());
+    } else if (scheduleSpecification.getSchedule() instanceof StreamSizeSchedule) {
+      StreamSizeSchedule s = (StreamSizeSchedule) scheduleSpecification.getSchedule();
+      return new ScheduleSpecification(
+        new StreamSizeSchedule(name, s.getDescription(), s.getStreamName(), s.getDataTriggerMB(),
+                               s.getRunConstraints()),
+        scheduleSpecification.getProgram(), scheduleSpecification.getProperties()
+      );
+    } else {
+      throw new BadRequestException("Unknown schedule type given");
+    }
   }
 
   @POST
@@ -625,27 +748,17 @@ public class ProgramLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
                                 String appVersion, String scheduleName)
     throws IOException, BadRequestException, NotFoundException, SchedulerException, AlreadyExistsException {
     ApplicationId applicationId = new ApplicationId(namespaceId, appId, appVersion);
-    ScheduleSpecification scheduleSpecFromRequest;
+    ScheduleUpdateDetail scheduleUpdateDetail;
     try (Reader reader = new InputStreamReader(new ChannelBufferInputStream(request.getContent()), Charsets.UTF_8)) {
-      // The schedule spec in the request body can contain only the changed information or more, but should always
-      // contain the schedule type for deserialization
-      scheduleSpecFromRequest = GSON.fromJson(reader, ScheduleSpecification.class);
+      scheduleUpdateDetail = GSON.fromJson(reader, ScheduleUpdateDetail.class);
     } catch (IOException e) {
-      LOG.debug("Error reading schedule specification from request body", e);
+      LOG.debug("Error reading schedule update details from request body", e);
       throw new IOException("Error reading request body");
     } catch (JsonSyntaxException e) {
       throw new BadRequestException("Request body is invalid json: " + e.getMessage());
     }
 
-    // If the schedule name is present in the request body, it should match the name in path params
-    if (!scheduleName.equals(scheduleSpecFromRequest.getSchedule().getName())) {
-      throw new BadRequestException(
-        String.format(
-          "schedule name in the body of the request (%s) does not match the schedule name in the path parameter (%s)",
-          scheduleSpecFromRequest.getSchedule().getName(), scheduleName));
-    }
-
-    lifecycleService.updateSchedule(applicationId, scheduleSpecFromRequest);
+    lifecycleService.updateSchedule(applicationId, scheduleName, scheduleUpdateDetail);
     responder.sendStatus(HttpResponseStatus.OK);
   }
 

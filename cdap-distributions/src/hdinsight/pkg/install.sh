@@ -22,7 +22,9 @@
 # The git branch to clone
 CDAP_BRANCH='release/4.1'
 # Optional tag to checkout - All released versions of this script should set this
-CDAP_TAG='v4.1.0'
+# like this: CDAP_TAG=${CDAP_TAG:+tag} as this allows setting tag to empty/null
+# otherwise, it should be CDAP_TAG=''
+CDAP_TAG=${CDAP_TAG:+v4.2.0}
 # The CDAP package version passed to Chef
 CDAP_VERSION='4.2.0-1'
 # The version of Chef to install
@@ -45,6 +47,9 @@ __cleanup_tmpdir() { test -d ${__tmpdir} && rm -rf ${__tmpdir}; };
 __create_tmpdir() { mkdir -p ${__tmpdir}; };
 
 # Begin CDAP Prep/Install
+
+# Synchronize repos
+apt-get update --yes || die "Failed to run 'apt-get update'"
 
 # Install git
 apt-get install --yes git || die "Failed to install git"

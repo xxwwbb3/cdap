@@ -31,7 +31,11 @@
 
   <properties>
     <app.main.class>co.cask.cdap.ui.ConfigurationJsonTool</app.main.class>
-    <ui.pack.version>1</ui.pack.version>
+    <!-- 
+      Note: Do not update this while bumping versions for a CDAP release. 
+      Only update this when releasing a new UI pack.
+    -->
+    <ui.pack.version>4.1.1_p3</ui.pack.version>
   </properties>
 
   <dependencies>
@@ -77,10 +81,6 @@
             </fileset>
             <fileset>
               <directory>login_dist</directory>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
-            <fileset>
-              <directory>wrangler_dist</directory>
               <followSymlinks>false</followSymlinks>
             </fileset>
             <fileset>
@@ -158,7 +158,6 @@
                   <exclude>**/common_dist/**</exclude>
                   <exclude>**/cdap_dist/**</exclude>
                   <exclude>**/login_dist/**</exclude>
-                  <exclude>**/wrangler_dist/**</exclude>
                   <exclude>**/logs/**</exclude>
                   <exclude>**/npm-debug.log</exclude>
                   <exclude>**/node/**</exclude>
@@ -332,9 +331,6 @@
                     </copy>
                     <copy todir = "${stage.opt.dir}/login_dist">
                       <fileset dir = "login_dist" />
-                    </copy>
-                    <copy todir = "${stage.opt.dir}/wrangler_dist">
-                      <fileset dir = "wrangler_dist" />
                     </copy>
                     <copy todir = "${stage.opt.dir}/bin">
                       <fileset dir = "node">

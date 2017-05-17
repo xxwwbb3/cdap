@@ -18,12 +18,15 @@ package co.cask.cdap.etl.mock.realtime;
 
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.plugin.PluginProperties;
+import co.cask.cdap.etl.api.Arguments;
 import co.cask.cdap.etl.api.Lookup;
 import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.realtime.RealtimeContext;
+import co.cask.cdap.etl.mock.common.MockArguments;
 import co.cask.cdap.etl.mock.common.NoopMetrics;
 import com.google.common.collect.Maps;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -33,9 +36,11 @@ import javax.annotation.Nullable;
  */
 public class MockRealtimeContext implements RealtimeContext {
   private final PluginProperties pluginProperties;
+  private final Arguments arguments;
 
   public MockRealtimeContext(Map<String, String> properties) {
     this.pluginProperties = PluginProperties.builder().addAll(properties).build();
+    this.arguments = new MockArguments();
   }
 
   public MockRealtimeContext() {
@@ -100,7 +105,26 @@ public class MockRealtimeContext implements RealtimeContext {
   }
 
   @Override
+  public Arguments getArguments() {
+    return arguments;
+  }
+
+  @Override
   public <T> Lookup<T> provide(String table, Map<String, String> arguments) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String applicationId, String serviceId) {
+    //no-op
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String serviceId) {
+    //no-op
     return null;
   }
 }

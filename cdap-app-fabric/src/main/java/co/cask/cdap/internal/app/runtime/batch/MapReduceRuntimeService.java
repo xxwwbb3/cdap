@@ -95,6 +95,7 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.tephra.Transaction;
@@ -107,6 +108,7 @@ import org.apache.twill.filesystem.LocationFactory;
 import org.apache.twill.internal.ApplicationBundler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -339,7 +341,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
         // submits job and returns immediately. Shouldn't need to set context ClassLoader.
         job.submit();
         // log after the job.submit(), because the jobId is not assigned before then
-        LOG.info("Submitted MapReduce Job: {}.", context);
+        LOG.debug("Submitted MapReduce Job: {}.", context);
 
         this.job = job;
         this.transaction = tx;
@@ -375,7 +377,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
       TimeUnit.SECONDS.sleep(1);
     }
 
-    LOG.info("MapReduce Job is complete, status: {}, job: {}", job.isSuccessful(), context);
+    LOG.info("MapReduce Job completed{}. Job details: [{}]", job.isSuccessful() ? " successfully" : "", context);
     // NOTE: we want to report the final stats (they may change since last report and before job completed)
     metricsWriter.reportStats();
     // If we don't sleep, the final stats may not get sent before shutdown.
@@ -385,7 +387,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
     // Shutdown will still get executed, but the service will notify failure after that.
     // However, if it's the job is requested to stop (via triggerShutdown, meaning it's a user action), don't throw
     if (!stopRequested) {
-      Preconditions.checkState(job.isSuccessful(), "MapReduce execution failure: %s", job.getStatus());
+      Preconditions.checkState(job.isSuccessful(), "MapReduce JobId {} failed", job.getStatus().getJobID());
     }
   }
 
@@ -396,7 +398,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
 
     try {
       if (success) {
-        LOG.info("Committing MapReduce Job transaction: {}", context);
+        LOG.debug("Committing MapReduce Job transaction: {}", context);
         // committing long running tx: no need to commit datasets, as they were committed in external processes
         // also no need to rollback changes if commit fails, as these changes where performed by mapreduce tasks
         // NOTE: can't call afterCommit on datasets in this case: the changes were made by external processes.
@@ -484,9 +486,14 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
       jobConf.setBoolean(Job.JOB_AM_ACCESS_DISABLED, false);
 
       Credentials credentials = UserGroupInformation.getCurrentUser().getCredentials();
-      LOG.info("Running in secure mode; adding all user credentials: {}", credentials.getAllTokens());
+      LOG.debug("Running in secure mode; adding all user credentials: {}", credentials.getAllTokens());
       job.getCredentials().addAll(credentials);
     }
+
+    // Command-line arguments are not supported here, but do this anyway to avoid warning log
+    GenericOptionsParser genericOptionsParser = new GenericOptionsParser(jobConf, null);
+    genericOptionsParser.getRemainingArgs();
+
     return job;
   }
 
@@ -988,6 +995,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
     classes.add(MapReduce.class);
     classes.add(MapperWrapper.class);
     classes.add(ReducerWrapper.class);
+    classes.add(SLF4JBridgeHandler.class);
 
     // We only need to trace the Input/OutputFormat class due to MAPREDUCE-5957 so that those classes are included
     // in the job.jar and be available in the MR system classpath before our job classloader (ApplicationClassLoader)
@@ -995,7 +1003,6 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
     if (cConf.getBoolean(Constants.AppFabric.MAPREDUCE_INCLUDE_CUSTOM_CLASSES)) {
       try {
         Class<? extends InputFormat<?, ?>> inputFormatClass = job.getInputFormatClass();
-        LOG.info("InputFormat class: {} {}", inputFormatClass, inputFormatClass.getClassLoader());
         classes.add(inputFormatClass);
 
         // If it is StreamInputFormat, also add the StreamEventCodec class as well.
@@ -1007,15 +1014,14 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
           }
         }
       } catch (Throwable t) {
-        LOG.info("InputFormat class not found: {}", t.getMessage(), t);
+        LOG.debug("InputFormat class not found: {}", t.getMessage(), t);
         // Ignore
       }
       try {
         Class<? extends OutputFormat<?, ?>> outputFormatClass = job.getOutputFormatClass();
-        LOG.info("OutputFormat class: {} {}", outputFormatClass, outputFormatClass.getClassLoader());
         classes.add(outputFormatClass);
       } catch (Throwable t) {
-        LOG.info("OutputFormat class not found: {}", t.getMessage(), t);
+        LOG.debug("OutputFormat class not found: {}", t.getMessage(), t);
         // Ignore
       }
     }
@@ -1037,7 +1043,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
     }
 
     ClassLoader oldCLassLoader = ClassLoaders.setContextClassLoader(new CombineClassLoader(
-      job.getConfiguration().getClassLoader(), Collections.singleton(ddlExecutorClass.getClassLoader())));
+      getClass().getClassLoader(), Collections.singleton(ddlExecutorClass.getClassLoader())));
 
     try {
       appBundler.createBundle(Locations.toLocation(jobJar), classes);
@@ -1045,7 +1051,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
       ClassLoaders.setContextClassLoader(oldCLassLoader);
     }
 
-    LOG.info("Built MapReduce Job Jar at {}", jobJar.toURI());
+    LOG.debug("Built MapReduce Job Jar at {}", jobJar.toURI());
     return jobJar;
   }
 
@@ -1223,7 +1229,7 @@ final class MapReduceRuntimeService extends AbstractExecutionThreadService {
     Location programJarCopy = targetDir.append("program.jar");
 
     ByteStreams.copy(Locations.newInputSupplier(programJarLocation), Locations.newOutputSupplier(programJarCopy));
-    LOG.info("Copied Program Jar to {}, source: {}", programJarCopy, programJarLocation);
+    LOG.debug("Copied Program Jar to {}, source: {}", programJarCopy, programJarLocation);
     return programJarCopy;
   }
 

@@ -26,7 +26,6 @@ import {MyStreamApi} from 'api/stream';
 import isNil from 'lodash/isNil';
 import T from 'i18n-react';
 import FastActionToMessage from 'services/fast-action-message-helper';
-import {createRouterPath} from 'react-router/LocationUtils';
 import capitalize from 'lodash/capitalize';
 
 export default class StreamOverview extends Component {
@@ -92,7 +91,8 @@ export default class StreamOverview extends Component {
             name: appId, // FIXME: Finalize on entity detail for fast action
             app: appId,
             id: this.props.entity.id,
-            type: 'stream'
+            type: 'stream',
+            properties: res[0]
           };
 
           this.setState({
@@ -144,7 +144,7 @@ export default class StreamOverview extends Component {
             state: {
               entityDetail: this.state.entityDetail,
               entityMetadata: this.props.entity,
-              previousPathname: createRouterPath(location).replace(/\/cdap\//g, '/')
+              previousPathname: (location.pathname + location.search).replace(/\/cdap\//g, '/')
             }
           }}
           onClose={this.props.onClose}
@@ -152,7 +152,7 @@ export default class StreamOverview extends Component {
           successMessage={this.state.successMessage}
         />
         <OverviewMetaSection
-          entity={this.state.entity}
+          entity={Object.assign({}, this.state.entityDetail, this.state.entity)}
           onFastActionSuccess={this.onFastActionSuccess.bind(this)}
           onFastActionUpdate={this.onFastActionUpdate.bind(this)}
           showSeparator={true}

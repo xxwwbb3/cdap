@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Cask Data, Inc.
+ * Copyright © 2016 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -21,6 +21,7 @@ import co.cask.cdap.api.artifact.ArtifactScope;
 import co.cask.cdap.api.artifact.ArtifactVersion;
 import co.cask.cdap.api.plugin.PluginClass;
 import co.cask.cdap.api.plugin.PluginPropertyField;
+import co.cask.cdap.proto.artifact.ArtifactVersionRange;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,18 +52,18 @@ public class ArtifactSelectorTest {
 
     // test scope only
     ArtifactSelector selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, null);
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
                         selector.select(plugins).getKey());
     selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, null);
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
 
     // test name only
     selector = new ArtifactSelector("type", "name", null, "abc", null);
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     selector = new ArtifactSelector("type", "name", null, "def", null);
-    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
       selector = new ArtifactSelector("type", "name", null, "xyz", null);
@@ -72,40 +73,66 @@ public class ArtifactSelectorTest {
     }
 
     // test version only
-    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersion("1.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersion("2.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
-      selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersion("3.0.0"));
+      selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+        new ArtifactVersion("3.0.0"), true, new ArtifactVersion("3.0.0"), true));
+      selector.select(plugins);
+    } catch (Exception e) {
+      // expected
+    }
+
+    // test range only
+    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    try {
+      selector = new ArtifactSelector("type", "name", null, null, new ArtifactVersionRange(
+        new ArtifactVersion("2.0.0"), false, new ArtifactVersion("3.0.0"), true));
       selector.select(plugins);
     } catch (Exception e) {
       // expected
     }
 
     // test name + version
-    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersion("1.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersion("2.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", null, "def", new ArtifactVersion("1.0.0"));
-    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, "def", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", null, "def", new ArtifactVersion("2.0.0"));
-    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", null, "def", new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
-      selector = new ArtifactSelector("type", "name", null, "xyz", new ArtifactVersion("1.0.0"));
+      selector = new ArtifactSelector("type", "name", null, "xyz", new ArtifactVersionRange(
+        new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
       selector.select(plugins);
     } catch (Exception e) {
       // expected
     }
     try {
-      selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersion("3.0.0"));
+      selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersionRange(
+        new ArtifactVersion("3.0.0"), true, new ArtifactVersion("3.0.0"), true));
       selector.select(plugins);
     } catch (Exception e) {
       // expected
@@ -113,16 +140,16 @@ public class ArtifactSelectorTest {
 
     // test name + scope
     selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "abc", null);
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
                         selector.select(plugins).getKey());
     selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "def", null);
-    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
                         selector.select(plugins).getKey());
     selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "abc", null);
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "def", null);
-    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
       selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "xyz", null);
@@ -132,31 +159,105 @@ public class ArtifactSelectorTest {
     }
 
     // test version + scope
-    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersion("1.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersion("2.0.0"));
-    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersion("1.0.0"));
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    try {
+      selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+        new ArtifactVersion("3.0.0"), true, new ArtifactVersion("3.0.0"), true));
+      selector.select(plugins);
+    } catch (Exception e) {
+      // expected
+    }
+
+    // test name + range
+    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
     Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
-    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersion("2.0.0"));
+    selector = new ArtifactSelector("type", "name", null, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
     Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
-      selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "xyz", null);
+      selector = new ArtifactSelector("type", "name", null, "def", new ArtifactVersionRange(
+        new ArtifactVersion("2.0.0"), false, new ArtifactVersion("3.0.0"), true));
+      selector.select(plugins);
+    } catch (Exception e) {
+      // expected
+    }
+
+    // test scope + range
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.SYSTEM),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, null, new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    try {
+      selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, null, new ArtifactVersionRange(
+        new ArtifactVersion("2.0.0"), false, new ArtifactVersion("3.0.0"), true));
       selector.select(plugins);
     } catch (Exception e) {
       // expected
     }
 
     // test name + version + scope
-    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "def", new ArtifactVersion("2.0.0"));
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "def", new ArtifactVersionRange(
+      new ArtifactVersion("2.0.0"), true, new ArtifactVersion("2.0.0"), true));
     Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
                         selector.select(plugins).getKey());
     try {
-      selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "xyz", new ArtifactVersion("2.0.0"));
+      selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "xyz", new ArtifactVersionRange(
+        new ArtifactVersion("1.0.0"), true, new ArtifactVersion("1.0.0"), true));
+      selector.select(plugins);
+    } catch (Exception e) {
+      // expected
+    }
+
+    // test name + scope + range
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "abc", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("abc", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "def", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), false));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("1.0.0"), ArtifactScope.SYSTEM),
+                        selector.select(plugins).getKey());
+    selector = new ArtifactSelector("type", "name", ArtifactScope.USER, "def", new ArtifactVersionRange(
+      new ArtifactVersion("1.0.0-SNAPSHOT"), true, new ArtifactVersion("2.0.0"), true));
+    Assert.assertEquals(new ArtifactId("def", new ArtifactVersion("2.0.0"), ArtifactScope.USER),
+                        selector.select(plugins).getKey());
+    try {
+      selector = new ArtifactSelector("type", "name", ArtifactScope.SYSTEM, "abc", new ArtifactVersionRange(
+        new ArtifactVersion("2.0.0"), false, new ArtifactVersion("3.0.0"), true));
       selector.select(plugins);
     } catch (Exception e) {
       // expected

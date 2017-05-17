@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright © 2016 Cask Data, Inc.
+# Copyright © 2016-2017 Cask Data, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -504,7 +504,7 @@ cdap_set_spark() {
       # Otherwise the spark-shell won't run correctly
       unset SPARK_HOME
       ERR_FILE=$(mktemp)
-      SPARK_VAR_OUT=$(echo 'for ((key, value) <- sys.env) println (key + "=" + value); exit' | spark-shell --master local 2>${ERR_FILE})
+      SPARK_VAR_OUT=$(echo 'for ((key, value) <- sys.env) println (key + "=" + value); sys.exit' | spark-shell --master local 2>${ERR_FILE})
       __ret=$?
       # spark-shell invocation above does not properly restore the stty.
       stty ${__saved_stty}
@@ -524,6 +524,8 @@ cdap_set_spark() {
 
   # Find environment variables setup via spark-env.sh
   cdap_load_spark_env || logecho "[WARN] Fail to source spark-env.sh to setup environment variables for Spark"
+  # Determine Spark Compat version
+  cdap_set_spark_compat
   return 0
 }
 
@@ -551,6 +553,42 @@ cdap_load_spark_env() {
       # Prefix the env variable with _SPARK_ to avoid conflicts
       export "_SPARK_${line%%=*}"="${line#*=}"
     done <<< "${SPARK_ENV}"
+  fi
+
+  return 0
+}
+
+#
+# cdap_set_spark_compat
+# Attempts to determine the spark version and set the SPARK_COMPAT env variable for the CDAP master to use
+#
+cdap_set_spark_compat() {
+  local readonly __saved_stty=$(stty -g 2>/dev/null)
+  # If SPARK_COMPAT is not already set, try to determine it
+  if [[ -z ${SPARK_COMPAT} ]] && [[ $(which spark-shell 2>/dev/null) ]]; then
+    ERR_FILE=$(mktemp)
+    SPARK_VAR_OUT=$(echo 'println("sparkVersion=" + org.apache.spark.SPARK_VERSION); println("scalaVersion=" + scala.util.Properties.releaseVersion.get); sys.exit' | spark-shell --master local 2>${ERR_FILE})
+
+    __ret=$?
+    # spark-shell invocation above does not properly restore the stty.
+    stty ${__saved_stty}
+    SPARK_ERR_MSG=$(< ${ERR_FILE})
+    rm ${ERR_FILE}
+    if [[ ${__ret} -ne 0 ]]; then
+      echo "[ERROR] Failed to get Spark and Scala versions using spark-shell"
+      echo "  stderr:"
+      echo "${SPARK_ERR_MSG}"
+      return 1
+    fi
+
+    SPARK_VERSION=$(echo -e "${SPARK_VAR_OUT}" | grep "^sparkVersion=" | cut -d= -f2)
+    SPARK_MAJOR_VERSION=$(echo ${SPARK_VERSION} | cut -d. -f1)
+    SCALA_VERSION=$(echo -e "${SPARK_VAR_OUT}" | grep "^scalaVersion=" | cut -d= -f2)
+    SCALA_MAJOR_VERSION=$(echo ${SCALA_VERSION} | cut -d. -f1)
+    SCALA_MINOR_VERSION=$(echo ${SCALA_VERSION} | cut -d. -f2)
+    SPARK_COMPAT="spark${SPARK_MAJOR_VERSION}_${SCALA_MAJOR_VERSION}.${SCALA_MINOR_VERSION}"
+
+    export SPARK_COMPAT
   fi
 
   return 0
@@ -636,6 +674,20 @@ cdap_start_bin() {
 }
 
 #
+# cdap_run_bin [args]
+# Runs a non-Java application with arguments in the foreground
+#
+cdap_run_bin() {
+  local readonly __bin=${1}
+  shift
+  local readonly __args=${@}
+  local readonly __ret
+  ${__bin} ${__args}
+  __ret=${?}
+  return ${__ret}
+}
+
+#
 # cdap_start_java [args]
 # Start a Java application from class name with arguments in the background
 #
@@ -653,6 +705,8 @@ cdap_start_java() {
   JAVA_HEAPMAX=${JAVA_HEAPMAX:-${!JAVA_HEAP_VAR}}
   export JAVA_HEAPMAX
   local __defines="-Dcdap.service=${CDAP_SERVICE} ${JAVA_HEAPMAX} -Duser.dir=${LOCAL_DIR} -Djava.io.tmpdir=${TEMP_DIR}"
+  logecho "$(date) Starting CDAP ${__name} service on ${HOSTNAME}"
+  echo
   if [[ ${CDAP_SERVICE} == master ]]; then
     # Determine SPARK_HOME
     cdap_set_spark || logecho "Could not determine SPARK_HOME! Spark support unavailable!"
@@ -668,12 +722,31 @@ cdap_start_java() {
     if [[ -n ${JAVA_LIBRARY_PATH} ]]; then
       __defines+=" -Djava.library.path=${JAVA_LIBRARY_PATH}"
     fi
-    __startup_checks=${CDAP_STARTUP_CHECKS:-$(cdap_get_conf "master.startup.checks.enabled" "${CDAP_CONF}"/cdap-site.xml true)}
+    # Check for HDP 2.2+ or IOP, otherwise do nothing and leave up to the user to configure
+    for __dist in hdp iop; do
+      if [[ $(which ${__dist}-select 2>/dev/null) ]]; then
+        local __auto_version=$(${__dist}-select status hadoop-client | awk '{print $3}')
+        # Check for version configured in OPTS
+        if [[ ${OPTS} =~ -D${__dist}.version ]]; then
+          local __conf_version=$(echo ${OPTS} | grep -oP "\-D${__dist}.version=\d+\.\d+\.\d+\.\d+-\d+" | cut -d= -f2)
+          if [[ ${__conf_version} != ${__auto_version} ]]; then
+            local __caps=$(echo ${__dist} | awk 'BEGIN { getline; print toupper($0) }')
+            logecho "[WARN] ${__caps} version mismatch! Detected: ${__auto_version}, Configured: ${__conf_version}"
+            logecho "[WARN] Using configured ${__caps} version: ${__conf_version}"
+          fi
+        else
+          # No version specified in OPTS or incorrect format, appending ours
+          __defines+=" -D${__dist}.version=${__auto_version}"
+          logecho "Detected ${__dist} version ${__auto_version} and adding to CDAP Master command line"
+        fi
+      fi
+    done
 
     # Build and upload coprocessor jars
     logecho "$(date) Ensuring required HBase coprocessors are on HDFS"
     cdap_setup_coprocessors </dev/null >>${__logfile} 2>&1 || die "Could not setup coprocessors. Please check ${__logfile} for more information."
 
+    __startup_checks=${CDAP_STARTUP_CHECKS:-$(cdap_get_conf "master.startup.checks.enabled" "${CDAP_CONF}"/cdap-site.xml true)}
     if [[ ${__startup_checks} == true ]]; then
       logecho "$(date) Running CDAP Master startup checks -- this may take a few minutes"
       "${JAVA}" ${JAVA_HEAPMAX} ${__explore} ${OPTS} -cp ${CLASSPATH} co.cask.cdap.master.startup.MasterStartupTool </dev/null >>${__logfile} 2>&1
@@ -682,7 +755,6 @@ cdap_start_java() {
       fi
     fi
   fi
-  logecho "$(date) Starting CDAP ${__name} service on ${HOSTNAME}"
   "${JAVA}" -version 2>>${__logfile}
   ulimit -a >>${__logfile}
   __defines+=" ${OPTS}"
@@ -787,6 +859,30 @@ cdap_version() {
     __version=${__cdap_major}.${__cdap_minor}.${__cdap_patch}-SNAPSHOT
   fi
   echo ${__version}
+}
+
+#
+# cdap_version_command
+# returns the version of CDAP SDK or all locally installed CDAP Distributed components
+#
+cdap_version_command() {
+  local readonly __context=$(cdap_context)
+  local __component __name
+  if [[ ${__context} == sdk ]]; then
+    echo "CDAP SDK version $(cdap_version)"
+    echo
+  else # Distributed, possibly CLI-only
+    if [[ -r ${CDAP_HOME}/VERSION ]]; then
+      echo "CDAP configuration version $(cdap_version)"
+    fi
+    for __component in cli gateway kafka master security ui; do
+      if [[ -r ${CDAP_HOME}/${__component}/VERSION ]]; then
+        echo "CDAP ${__component} version $(cdap_version ${__component})"
+      fi
+    done
+    echo
+  fi
+  return 0
 }
 
 ###
@@ -1102,6 +1198,25 @@ cdap_upgrade_tool() {
   cdap_run_class ${__class} ${@}
   __ret=${?}
   return ${__ret}
+}
+
+#
+# cdap_apply_pack [arguments]
+#
+cdap_apply_pack() {
+  local __ui_pack=${1}
+  local __ext=${__ui_pack##*.}
+
+  if [[ -f ${__ui_pack} ]] && [[ -r ${__ui_pack} ]] && [[ ${__ext} == zip ]]; then
+    # ui upgrade script must be run from subdirectory
+    cd ${CDAP_HOME}/ui/cdap-ui-upgrade
+
+    cdap_run_bin "npm" "run" "upgrade" "--" "--new-ui-zip-path=${__ui_pack}"
+    __ret=${?}
+    return ${__ret}
+  else
+    die "UI pack must be an absolute path to a zip file"
+  fi
 }
 
 #

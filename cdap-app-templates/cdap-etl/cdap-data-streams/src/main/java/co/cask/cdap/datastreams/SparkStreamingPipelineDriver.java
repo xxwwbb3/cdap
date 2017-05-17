@@ -32,6 +32,7 @@ import co.cask.cdap.etl.api.streaming.StreamingSource;
 import co.cask.cdap.etl.api.streaming.Windower;
 import co.cask.cdap.etl.common.Constants;
 import co.cask.cdap.etl.common.PipelinePhase;
+import co.cask.cdap.etl.common.plugin.PipelinePluginContext;
 import co.cask.cdap.etl.planner.StageInfo;
 import co.cask.cdap.etl.spec.StageSpec;
 import co.cask.cdap.internal.io.SchemaTypeAdapter;
@@ -62,6 +63,7 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
 
   @Override
   public void run(final JavaSparkExecutionContext sec) throws Exception {
+
     final DataStreamsPipelineSpec pipelineSpec = GSON.fromJson(sec.getSpecification().getProperty(Constants.PIPELINEID),
                                                                DataStreamsPipelineSpec.class);
 
@@ -74,18 +76,19 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
                               .addInputSchemas(stageSpec.getInputSchemas())
                               .setOutputSchema(stageSpec.getOutputSchema())
                               .setErrorSchema(stageSpec.getErrorSchema())
+                              .setStageLoggingEnabled(pipelineSpec.isStageLoggingEnabled())
+                              .setProcessTimingEnabled(pipelineSpec.isProcessTimingEnabled())
                               .build());
     }
     final PipelinePhase pipelinePhase = phaseBuilder.build();
 
-    boolean checkpointsDisabled = Boolean.parseBoolean(
-      sec.getSpecification().getProperty(DataStreamsSparkLauncher.CHECKPOINTS_DISABLED));
+    boolean checkpointsDisabled = pipelineSpec.isCheckpointsDisabled();
 
     String checkpointDir = null;
     if (!checkpointsDisabled) {
       // Get the location of the checkpoint directory.
       String pipelineName = sec.getApplicationSpecification().getName();
-      String pipelineId = sec.getSpecification().getProperty(DataStreamsSparkLauncher.CHECKPOINT_DIR);
+      String relativeCheckpointDir = pipelineSpec.getCheckpointDirectory();
 
       // there isn't any way to instantiate the fileset except in a TxRunnable, so need to use a reference.
       final AtomicReference<Location> checkpointBaseRef = new AtomicReference<>();
@@ -96,12 +99,13 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
           checkpointBaseRef.set(checkpointFileSet.getBaseLocation());
         }
       });
-      Location pipelineCheckpointDir = checkpointBaseRef.get().append(pipelineName).append(pipelineId);
+      Location pipelineCheckpointDir = checkpointBaseRef.get().append(pipelineName).append(relativeCheckpointDir);
       checkpointDir = pipelineCheckpointDir.toURI().toString();
     }
 
     JavaStreamingContext jssc = run(pipelineSpec, pipelinePhase, sec, checkpointDir);
     jssc.start();
+
     boolean stopped = false;
     try {
       // most programs will just keep running forever.
@@ -113,6 +117,7 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
         jssc.stop(true, pipelineSpec.isStopGracefully());
       }
     }
+
   }
 
   private JavaStreamingContext run(final DataStreamsPipelineSpec pipelineSpec,
@@ -125,12 +130,15 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
       public JavaStreamingContext create() {
         JavaStreamingContext jssc = new JavaStreamingContext(
           new JavaSparkContext(), Durations.milliseconds(pipelineSpec.getBatchIntervalMillis()));
-        SparkStreamingPipelineRunner runner = new SparkStreamingPipelineRunner(sec, jssc, false,
-                                                                               pipelineSpec.getNumOfRecordsPreview());
+        SparkStreamingPipelineRunner runner = new SparkStreamingPipelineRunner(sec, jssc, pipelineSpec, false);
+        PipelinePluginContext pluginContext = new PipelinePluginContext(sec.getPluginContext(), sec.getMetrics(),
+                                                                        pipelineSpec.isStageLoggingEnabled(),
+                                                                        pipelineSpec.isProcessTimingEnabled());
         // TODO: figure out how to get partitions to use for aggregators and joiners.
         // Seems like they should be set at configure time instead of runtime? but that requires an API change.
         try {
-          runner.runPipeline(pipelinePhase, StreamingSource.PLUGIN_TYPE, sec, new HashMap<String, Integer>());
+          runner.runPipeline(pipelinePhase, StreamingSource.PLUGIN_TYPE,
+                             sec, new HashMap<String, Integer>(), pluginContext);
         } catch (Exception e) {
           throw new RuntimeException(e);
         }
@@ -141,8 +149,7 @@ public class SparkStreamingPipelineDriver implements JavaSparkMain {
       }
     };
 
-    return JavaStreamingContext.getOrCreate(checkpointDir, contextFactory);
+    return checkpointDir == null ? contextFactory.create() :
+      JavaStreamingContext.getOrCreate(checkpointDir, contextFactory);
   }
-
-
 }

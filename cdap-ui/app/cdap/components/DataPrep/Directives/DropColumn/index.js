@@ -15,7 +15,11 @@
  */
 
 import React, { Component, PropTypes } from 'react';
+import T from 'i18n-react';
 import {execute} from 'components/DataPrep/store/DataPrepActionCreator';
+import DataPrepStore from 'components/DataPrep/store';
+import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
+const PREFIX = 'features.DataPrep.Directives.Drop';
 
 export default class DropColumnDirective extends Component {
   constructor(props) {
@@ -24,7 +28,7 @@ export default class DropColumnDirective extends Component {
   }
 
   applyDirective() {
-    let column = this.props.column;
+    let column = this.props.column.toString();
     let directive = `drop ${column}`;
 
     execute([directive])
@@ -32,22 +36,39 @@ export default class DropColumnDirective extends Component {
         this.props.onComplete();
       }, (err) => {
         console.log('Error', err);
+
+        DataPrepStore.dispatch({
+          type: DataPrepActions.setError,
+          payload: {
+            message: err.message || err.response.message
+          }
+        });
       });
   }
 
   render() {
+    let title = T.translate(`${PREFIX}.title.singular`);
+    if (Array.isArray(this.props.column) && this.props.column.length >= 2) {
+      title = T.translate(`${PREFIX}.title.plural`);
+    }
+
     return (
       <div
-        className="drop-column clearfix action-item"
+        className="drop-column-directive clearfix action-item"
         onClick={this.applyDirective}
       >
-        <span>Delete This Column</span>
+        <span>
+          {title}
+        </span>
       </div>
     );
   }
 }
 
 DropColumnDirective.propTypes = {
-  column: PropTypes.string,
+  column: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.array
+  ]),
   onComplete: PropTypes.func
 };

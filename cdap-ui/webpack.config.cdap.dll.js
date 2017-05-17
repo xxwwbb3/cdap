@@ -40,15 +40,14 @@ var webpackConfig = {
       'fuse.js',
       'react-dropzone',
       'react-redux',
-      'react-router',
       'moment',
+      'react-router-dom',
       'react-file-download',
       'mousetrap',
-      'papaparse',
       'd3',
-      'chart.js',
       'cdap-avsc',
-      'react-datetime'
+      'react-datetime',
+      'svg4everybody'
     ]
   },
   output: {

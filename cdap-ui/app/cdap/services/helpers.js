@@ -17,6 +17,8 @@
 import isObject from 'lodash/isObject';
 import numeral from 'numeral';
 import moment from 'moment';
+import isNil from 'lodash/isNil';
+import isEmpty from 'lodash/isEmpty';
 
 /*
   Purpose: Query a json object or an array of json objects
@@ -102,14 +104,17 @@ function contructUrl ({path}) {
 }
 
 
-function convertBytesToHumanReadable(bytes, type) {
+function convertBytesToHumanReadable(bytes, type, includeSpace) {
   if (!bytes || typeof bytes !== 'number') {
     return bytes;
   }
+  let format = includeSpace ? '0.00 b' : '0.00b';
+
   if (type === HUMANREADABLESTORAGE_NODECIMAL) {
-    return numeral(bytes).format('0b');
+    format = includeSpace ? '0 b' : '0b';
   }
-  return numeral(bytes).format('0.00b');
+
+  return numeral(bytes).format(format);
 }
 
 function isDescendant(parent, child) {
@@ -126,8 +131,16 @@ function isDescendant(parent, child) {
 function getArtifactNameAndVersion (nameWithVersion) {
   // core-plugins-3.4.0-SNAPSHOT.jar
   // extracts version from the jar file name. We then get the name of the artifact (that is from the beginning up to version beginning)
-  let regExpRule = new RegExp('(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:[.\\-](.*))?$');
-  let version = regExpRule.exec(nameWithVersion)[0];
+  // Fixed it to use a suffix pattern. Added `\\-` to detect versions from names such as `redshifttos3-action-plugin-1.0.0.json`
+  if (isNil(nameWithVersion) || isEmpty(nameWithVersion)) {
+    return {name: nameWithVersion, version: undefined};
+  }
+  let regExpRule = new RegExp('\\-(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?(?:[.\\-](.*))?$');
+  let version = regExpRule.exec(nameWithVersion);
+  if (!version) {
+    return {name: nameWithVersion, version: undefined};
+  }
+  version = version[0].slice(1);
   let name = nameWithVersion.substr(0, nameWithVersion.indexOf(version) -1);
   return { version, name };
 }
@@ -163,6 +176,19 @@ function getIcon(entity) {
   }
 }
 
+const defaultEventObject = {
+  stopPropagation: () => {},
+  nativeEvent: {
+    stopImmediatePropagation: () => {}
+  },
+  preventDefault: () => {}
+};
+function preventPropagation(e = defaultEventObject) {
+  e.stopPropagation();
+  e.nativeEvent.stopImmediatePropagation();
+  e.preventDefault();
+}
+
 export {
   objectQuery,
   convertBytesToHumanReadable,
@@ -173,5 +199,6 @@ export {
   removeAt,
   humanReadableDate,
   contructUrl,
-  getIcon
+  getIcon,
+  preventPropagation
 };

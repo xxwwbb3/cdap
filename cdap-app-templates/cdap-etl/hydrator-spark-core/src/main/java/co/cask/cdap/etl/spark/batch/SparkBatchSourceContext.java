@@ -18,8 +18,8 @@ package co.cask.cdap.etl.spark.batch;
 
 import co.cask.cdap.api.data.batch.Input;
 import co.cask.cdap.api.spark.SparkClientContext;
-import co.cask.cdap.etl.api.LookupProvider;
 import co.cask.cdap.etl.api.batch.BatchSourceContext;
+import co.cask.cdap.etl.common.DatasetContextLookupProvider;
 import co.cask.cdap.etl.common.ExternalDatasets;
 import co.cask.cdap.etl.planner.StageInfo;
 
@@ -30,17 +30,24 @@ import java.util.UUID;
  */
 public class SparkBatchSourceContext extends AbstractSparkBatchContext implements BatchSourceContext {
   private final SparkBatchSourceFactory sourceFactory;
+  private final boolean isPreviewEnabled;
 
   public SparkBatchSourceContext(SparkBatchSourceFactory sourceFactory, SparkClientContext sparkContext,
-                                 LookupProvider lookupProvider, StageInfo stageInfo) {
-    super(sparkContext, lookupProvider, stageInfo);
+                                 StageInfo stageInfo) {
+    super(sparkContext, new DatasetContextLookupProvider(sparkContext), stageInfo);
     this.sourceFactory = sourceFactory;
+    this.isPreviewEnabled = sparkContext.getDataTracer(stageInfo.getName()).isEnabled();
   }
 
   @Override
   public void setInput(Input input) {
     Input trackableInput = ExternalDatasets.makeTrackable(admin, suffixInput(input));
     sourceFactory.addInput(getStageName(), trackableInput);
+  }
+
+  @Override
+  public boolean isPreviewEnabled() {
+    return isPreviewEnabled;
   }
 
   private Input suffixInput(Input input) {

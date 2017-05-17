@@ -19,6 +19,7 @@ package co.cask.cdap.etl.batch;
 import co.cask.cdap.api.Resources;
 import co.cask.cdap.etl.common.PipelinePhase;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.Map;
 
@@ -32,23 +33,28 @@ public class BatchPhaseSpec {
   private final Resources driverResources;
   private final Resources clientResources;
   private final boolean isStageLoggingEnabled;
+  private final boolean isProcessTimingEnabled;
   private final Map<String, String> connectorDatasets;
+  private final Map<String, String> pipelineProperties;
   private final String description;
   private final int numOfRecordsPreview;
 
   public BatchPhaseSpec(String phaseName, PipelinePhase phase,
                         Resources resources, Resources driverResources, Resources clientResources,
-                        boolean isStageLoggingEnabled,
-                        Map<String, String> connectorDatasets, int numOfRecordsPreview) {
+                        boolean isStageLoggingEnabled, boolean isProcessTimingEnabled,
+                        Map<String, String> connectorDatasets, int numOfRecordsPreview,
+                        Map<String, String> pipelineProperties) {
     this.phaseName = phaseName;
     this.phase = phase;
     this.resources = resources;
     this.driverResources = driverResources;
     this.clientResources = clientResources;
     this.isStageLoggingEnabled = isStageLoggingEnabled;
+    this.isProcessTimingEnabled = isProcessTimingEnabled;
     this.connectorDatasets = connectorDatasets;
     this.description = createDescription();
     this.numOfRecordsPreview = numOfRecordsPreview;
+    this.pipelineProperties = ImmutableMap.copyOf(pipelineProperties);
   }
 
   public String getPhaseName() {
@@ -75,6 +81,10 @@ public class BatchPhaseSpec {
     return isStageLoggingEnabled;
   }
 
+  public boolean isProcessTimingEnabled() {
+    return isProcessTimingEnabled;
+  }
+
   public Map<String, String> getConnectorDatasets() {
     return connectorDatasets;
   }
@@ -85,6 +95,10 @@ public class BatchPhaseSpec {
 
   public int getNumOfRecordsPreview() {
     return numOfRecordsPreview;
+  }
+
+  public Map<String, String> getPipelineProperties() {
+    return pipelineProperties;
   }
 
   private String createDescription() {

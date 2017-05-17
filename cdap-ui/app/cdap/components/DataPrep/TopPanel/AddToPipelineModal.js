@@ -25,6 +25,7 @@ import {findHighestVersion} from 'services/VersionRange/VersionUtilities';
 import {objectQuery} from 'services/helpers';
 import T from 'i18n-react';
 import {getParsedSchemaForDataPrep} from 'components/SchemaEditor/SchemaHelpers';
+import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
 
 const mapErrorToMessage = (e) => {
   let message = e.message;
@@ -50,19 +51,15 @@ export default class AddToHydratorModal extends Component {
       loading: true,
       batchUrl: null,
       realtimeUrl: null,
-      error: null
+      error: null,
+      workspaceId: null,
+      realtimeConfig: null,
+      batchConfig: null
     };
   }
 
   componentWillMount() {
     this.generateLinks();
-    window.onbeforeunload = null;
-  }
-
-  componentWillUnmount() {
-    window.onbeforeunload = function() {
-      return "Are you sure you want to leave this page?";
-    };
   }
 
   generateLinks() {
@@ -70,7 +67,7 @@ export default class AddToHydratorModal extends Component {
 
     MyDataPrepApi.getInfo({ namespace })
       .subscribe((res) => {
-        let pluginVersion = res.value[0]['plugin.version'];
+        let pluginVersion = res.values[0]['plugin.version'];
 
         this.constructProperties(pluginVersion);
       }, (err) => {
@@ -121,6 +118,50 @@ export default class AddToHydratorModal extends Component {
     return returnArtifact;
   }
 
+  constructSource(artifactsList, properties) {
+    if (!properties) { return null; }
+
+    let plugin = objectQuery(properties, 'values', '0');
+
+    let pluginName = Object.keys(plugin)[0];
+
+    plugin = plugin[pluginName];
+    let batchArtifact = find(artifactsList, { 'name': 'core-plugins' });
+    let realtimeArtifact = find(artifactsList, { 'name': 'spark-plugins' });
+
+    let batchPluginInfo = {
+      name: plugin.name,
+      label: plugin.name,
+      type: 'batchsource',
+      artifact: batchArtifact,
+      properties: plugin.properties
+    };
+
+    let realtimePluginInfo = Object.assign({}, batchPluginInfo, {
+      type: 'streamingsource',
+      artifact: realtimeArtifact
+    });
+
+    let batchStage = {
+      name: 'File',
+      plugin: batchPluginInfo
+    };
+
+    let realtimeStage = {
+      name: 'File',
+      plugin: realtimePluginInfo
+    };
+
+    return {
+      batchSource: batchStage,
+      realtimeSource: realtimeStage,
+      connections: [{
+        from: 'File',
+        to: 'Wrangler'
+      }]
+    };
+  }
+
   constructProperties(pluginVersion) {
     let namespace = NamespaceStore.getState().selectedNamespace;
     let state = DataPrepStore.getState().dataprep;
@@ -132,12 +173,24 @@ export default class AddToHydratorModal extends Component {
     };
 
     let directives = state.directives;
-    if (directives) {
-      requestObj.directive = directives;
+
+    let requestBody = directiveRequestBodyCreator(directives);
+
+    let rxArray = [
+      MyDataPrepApi.getSchema(requestObj, requestBody)
+    ];
+
+    if (state.workspaceUri && state.workspaceUri.length > 0) {
+      let specParams = {
+        namespace,
+        path: state.workspaceUri
+      };
+
+      rxArray.push(MyDataPrepApi.getSpecification(specParams));
     }
 
     MyArtifactApi.list({ namespace })
-      .combineLatest(MyDataPrepApi.getSchema(requestObj))
+      .combineLatest(rxArray)
       .subscribe((res) => {
         let batchArtifact = find(res[0], { 'name': 'cdap-data-pipeline' });
         let realtimeArtifact = find(res[0], { 'name': 'cdap-data-streams' });
@@ -150,9 +203,10 @@ export default class AddToHydratorModal extends Component {
         };
 
         let properties = {
-          field: '*',
+          workspaceId,
           directives: directives.join('\n'),
-          schema: JSON.stringify(tempSchema)
+          schema: JSON.stringify(tempSchema),
+          field: '*'
         };
 
         try {
@@ -166,32 +220,52 @@ export default class AddToHydratorModal extends Component {
           return;
         }
 
-        // Generate hydrator config as URL parameters
-        let config = {
-          config: {
-            source: {},
-            transforms: [{
-              name: 'Wrangler',
-              plugin: {
-                name: 'Wrangler',
-                label: 'Wrangler',
-                artifact: wranglerArtifact,
-                properties
-              }
-            }],
-            sinks:[],
-            connections: []
+        let wranglerStage = {
+          name: 'Wrangler',
+          plugin: {
+            name: 'Wrangler',
+            label: 'Wrangler',
+            type: 'transform',
+            artifact: wranglerArtifact,
+            properties
           }
         };
 
-        let realtimeConfig = Object.assign({}, config, {artifact: realtimeArtifact});
-        let batchConfig = Object.assign({}, config, {artifact: batchArtifact});
+        let connections = [];
+
+        let realtimeStages = [wranglerStage];
+        let batchStages = [wranglerStage];
+
+        let sourceConfigs = this.constructSource(res[0], res[2]);
+        if (sourceConfigs) {
+          realtimeStages.push(sourceConfigs.realtimeSource);
+          batchStages.push(sourceConfigs.batchSource);
+          connections = sourceConfigs.connections;
+        }
+
+        let realtimeConfig = {
+          artifact: realtimeArtifact,
+          config: {
+            stages: realtimeStages,
+            batchInterval: '10s',
+            connections
+          }
+        };
+
+        let batchConfig = {
+          artifact: batchArtifact,
+          config: {
+            stages: batchStages,
+            connections
+          }
+        };
 
         let realtimeUrl = window.getHydratorUrl({
           stateName: 'hydrator.create',
           stateParams: {
             namespace,
-            configParams: realtimeConfig
+            workspaceId,
+            artifactType: realtimeArtifact.name
           }
         });
 
@@ -199,14 +273,18 @@ export default class AddToHydratorModal extends Component {
           stateName: 'hydrator.create',
           stateParams: {
             namespace,
-            configParams: batchConfig
+            workspaceId,
+            artifactType: batchArtifact.name
           }
         });
 
         this.setState({
           loading: false,
           realtimeUrl,
-          batchUrl
+          batchUrl,
+          workspaceId,
+          realtimeConfig,
+          batchConfig
         });
 
       }, (err) => {
@@ -254,6 +332,9 @@ export default class AddToHydratorModal extends Component {
             <a
               href={this.state.batchUrl}
               className="btn btn-secondary"
+              onClick={(() => {
+                window.localStorage.setItem(this.state.workspaceId, JSON.stringify(this.state.batchConfig));
+              }).bind(this)}
             >
               <i className="fa icon-ETLBatch"/>
               <span>Batch Pipeline</span>
@@ -261,6 +342,9 @@ export default class AddToHydratorModal extends Component {
             <a
               href={this.state.realtimeUrl}
               className="btn btn-secondary"
+              onClick={(() => {
+                window.localStorage.setItem(this.state.workspaceId, JSON.stringify(this.state.realtimeConfig));
+              }).bind(this)}
             >
               <i className="fa icon-sparkstreaming"/>
               <span>Realtime Pipeline</span>

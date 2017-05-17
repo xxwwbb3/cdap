@@ -28,6 +28,7 @@ import globalEvents from 'services/global-events';
 import SearchStore from 'components/EntityListView/SearchStore';
 import {JUSTADDED_THRESHOLD_TIME} from 'components/EntityListView/SearchStore/SearchConstants';
 import isNil from 'lodash/isNil';
+import SearchStoreActions from 'components/EntityListView/SearchStore/SearchStoreActions';
 require('./JustAddedSection.scss');
 
 export default class JustAddedSection extends Component {
@@ -47,10 +48,10 @@ export default class JustAddedSection extends Component {
     this.eventEmitter.on(globalEvents.DELETEENTITY, this.fetchEntities);
     this.eventEmitter.on(globalEvents.ARTIFACTUPLOAD, this.fetchEntities);
     this.namespaceSub = NamespaceStore.subscribe(this.fetchEntities);
+    this.unmounted = false;
   }
 
   componentWillMount() {
-    this.fetchEntities();
     this.searchStoreSubscription = SearchStore.subscribe(() => {
       let overviewEntity = SearchStore.getState().search.overviewEntity;
       if (isNil(overviewEntity)) {
@@ -74,6 +75,15 @@ export default class JustAddedSection extends Component {
     });
   }
 
+  componentDidMount() {
+    SearchStore.dispatch({
+      type: SearchStoreActions.SETPAGESIZE,
+      payload: {
+        element: document.getElementsByClassName('entity-list-view')
+      }
+    });
+    this.fetchEntities();
+  }
   componentWillUnmount() {
     this.eventEmitter.off(globalEvents.APPUPLOAD, this.fetchEntities);
     this.eventEmitter.off(globalEvents.STREAMCREATE, this.fetchEntities);
@@ -84,6 +94,7 @@ export default class JustAddedSection extends Component {
       this.searchStoreSubscription();
     }
     this.namespaceSub();
+    this.unmounted = true;
   }
 
   fetchEntities() {
@@ -115,13 +126,13 @@ export default class JustAddedSection extends Component {
           });
       })
       .subscribe((res) => {
-        this.setState({
+        !this.unmounted && this.setState({
           entities: res,
           loading: false
         });
       }, (err) => {
         console.log('Error', err);
-        this.setState({loading: false});
+        !this.unmounted && this.setState({loading: false});
       });
   }
 

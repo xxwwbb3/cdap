@@ -49,7 +49,7 @@ angular.module(PKG.name + '.feature.hydrator')
         }
       })
         .state('hydrator.create', {
-          url: '/studio?artifactType&draftId&configParams',
+          url: '/studio?artifactType&draftId&workspaceId&configParams',
           onEnter: function() {
             document.title = 'CDAP | Studio';
           },
@@ -62,28 +62,60 @@ angular.module(PKG.name + '.feature.hydrator')
             highlightTab: 'hydratorStudioPlusPlus'
           },
           resolve: {
-            rConfig: function($stateParams, mySettings, $q, myHelpers) {
+            rConfig: function($stateParams, mySettings, $q, myHelpers, $window, $rootScope, HydratorPlusPlusHydratorService) {
               var defer = $q.defer();
               if ($stateParams.draftId) {
                 mySettings.get('hydratorDrafts', true)
                   .then(function(res) {
                     var draft = myHelpers.objectQuery(res, $stateParams.namespace, $stateParams.draftId);
+                    let isVersionInRange = HydratorPlusPlusHydratorService
+                      .isVersionInRange({
+                        supportedVersion: $rootScope.cdapVersion,
+                        versionRange: draft.artifact.version
+                      });
+                    if (isVersionInRange) {
+                      draft.artifact.version = $rootScope.cdapVersion;
+                    } else {
+                      defer.resolve(false);
+                      return;
+                    }
                     if (angular.isObject(draft)) {
                       defer.resolve(draft);
                     } else {
                       defer.resolve(false);
                     }
                   });
-              } else if ($stateParams.data){
-                defer.resolve($stateParams.data);
               } else if ($stateParams.configParams) {
+                // This is being used while adding a dataset/stream as source/sink from metadata to pipeline studio
                 try {
-                  var config = JSON.parse($stateParams.configParams);
-
+                  let config = JSON.parse($stateParams.configParams);
                   defer.resolve(config);
                 } catch (e) {
                   defer.resolve(false);
                 }
+              } else if ($stateParams.data) {
+                // This is being used while cloning a published a pipeline.
+                let isVersionInRange = HydratorPlusPlusHydratorService
+                  .isVersionInRange({
+                    supportedVersion: $rootScope.cdapVersion,
+                    versionRange: $stateParams.data.artifact.version
+                  });
+                if (isVersionInRange) {
+                  $stateParams.data.artifact.version = $rootScope.cdapVersion;
+                } else {
+                  defer.resolve(false);
+                }
+                defer.resolve($stateParams.data);
+              } else if ($stateParams.workspaceId) {
+                // This is being used by dataprep to pipelines transition
+                try {
+                  let configParams = $window.localStorage.getItem($stateParams.workspaceId);
+                  let config = JSON.parse(configParams);
+                  defer.resolve(config);
+                } catch (e) {
+                  defer.resolve(false);
+                }
+                $window.localStorage.removeItem($stateParams.workspaceId);
               }
               else {
                 defer.resolve(false);
@@ -129,7 +161,7 @@ angular.module(PKG.name + '.feature.hydrator')
                 };
 
                 let chooseDefaultArtifact = () => {
-                  if(!isArtifactValid(artifactsFromBackend, GLOBALS.etlDataPipeline)) {
+                  if (!isArtifactValid(artifactsFromBackend, GLOBALS.etlDataPipeline)) {
                     if (!isAnyUISupportedArtifactPresent(artifactsFromBackend).length) {
                       return showWarningAndNavigateAway();
                     } else {
@@ -142,11 +174,11 @@ angular.module(PKG.name + '.feature.hydrator')
                   }
                 };
 
-                if(!artifactsFromBackend.length) {
+                if (!artifactsFromBackend.length) {
                   return showWarningAndNavigateAway();
                 }
 
-                if(!isArtifactValid(artifactsFromBackend, $stateParams.artifactType)) {
+                if (!isArtifactValid(artifactsFromBackend, $stateParams.artifactType)) {
                   chooseDefaultArtifact();
                 } else {
                   defer.resolve($stateParams.artifactType);
@@ -236,7 +268,7 @@ angular.module(PKG.name + '.feature.hydrator')
                     let config = pipelineDetail.configuration;
                     try {
                       config = JSON.parse(config);
-                    } catch(e) {
+                    } catch (e) {
                       myAlertOnValium.show({
                         type: 'danger',
                         content: 'Invalid configuration JSON.'
@@ -247,7 +279,7 @@ angular.module(PKG.name + '.feature.hydrator')
                       $state.go('hydrator.list');
                       return;
                     }
-                    if(!config.stages) {
+                    if (!config.stages) {
                       myAlertOnValium.show({
                         type: 'danger',
                         content: 'Pipeline is created using older version of hydrator. Please upgrage the pipeline to newer version(3.4) to view in UI.'

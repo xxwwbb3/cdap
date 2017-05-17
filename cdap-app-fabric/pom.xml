@@ -226,15 +226,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>co.cask.cdap</groupId>
-      <artifactId>cdap-api-spark</artifactId>
-      <version>4.2.0-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.10</artifactId>
-      <scope>test</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
     </dependency>
   </dependencies>
 

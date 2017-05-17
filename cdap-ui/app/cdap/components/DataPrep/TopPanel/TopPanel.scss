@@ -14,15 +14,41 @@
  * the License.
  */
 
+$top-panel-connection-color: #999999;
+
+@import '../../../styles/variables.scss';
+
 .dataprep-container {
   .top-panel {
     height: 50px;
     border-bottom: 1px solid #cccccc;
 
     .left-title {
+      width: calc(100% - 270px);
+
+      .data-prep-name,
+      .upgrade-button {
+        display: inline-block;
+      }
+
       .data-prep-name {
         font-size: 18px;
         padding: 0 10px;
+
+        .connection-type {
+          font-size: 13px;
+          color: $top-panel-connection-color;
+        }
+      }
+
+      .upgrade-button {
+        margin-top: 2px;
+        margin-left: 15px;
+        vertical-align: top;
+
+        .fa.fa-wrench {
+          margin-right: 3px;
+        }
       }
 
       .workspace-mgmt {
@@ -31,15 +57,6 @@
         font-size: 14px;
 
         .fa-pencil { margin-left: 10px; }
-      }
-    }
-
-    .upgrade-button {
-      margin-top: 3px;
-      margin-left: 15px;
-
-      .fa.fa-wrench {
-        margin-right: 3px;
       }
     }
 
@@ -81,6 +98,12 @@
       }
     }
 
+    .file-input {
+      input.form-control {
+        height: initial;
+      }
+    }
+
     .record-delimiter {
       margin-top: 10px;
       .label-control { margin-right: 10px; }
@@ -101,13 +124,13 @@
       padding: 25px;
       &.error-message-container {
         padding: 15px;
-        pre {
-          margin: 0;
-        }
         .fa.fa-exclamation-triangle {
           font-size: 15px;
           margin-right: 5px;
         }
+      }
+      .remedy-message {
+        margin: 3px 0;
       }
     }
 
@@ -159,8 +182,12 @@
   .modal-body {
     overflow-y: auto;
     max-height: 75vh;
-    pre {
-      margin: 0;
+    .remedy-message {
+      margin: 3px 0;
+    }
+    .btn-link {
+      cursor: pointer;
+      color: $cdap_orange;
     }
     .fa.fa-exclamation-triangle {
       margin-right: 5px;

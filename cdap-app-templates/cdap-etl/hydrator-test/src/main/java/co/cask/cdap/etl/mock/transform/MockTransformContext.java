@@ -18,13 +18,16 @@ package co.cask.cdap.etl.mock.transform;
 
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.plugin.PluginProperties;
+import co.cask.cdap.etl.api.Arguments;
 import co.cask.cdap.etl.api.Lookup;
 import co.cask.cdap.etl.api.LookupProvider;
 import co.cask.cdap.etl.api.StageMetrics;
 import co.cask.cdap.etl.api.TransformContext;
+import co.cask.cdap.etl.mock.common.MockArguments;
 import co.cask.cdap.etl.mock.common.MockLookupProvider;
 import co.cask.cdap.etl.mock.common.MockStageMetrics;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +41,7 @@ public class MockTransformContext implements TransformContext {
   private final MockStageMetrics metrics;
   private final LookupProvider lookup;
   private final String stageName;
+  private final Arguments arguments;
 
   public MockTransformContext() {
     this("someStage");
@@ -56,6 +60,7 @@ public class MockTransformContext implements TransformContext {
     this.lookup = lookup;
     this.metrics = new MockStageMetrics(stageName);
     this.stageName = stageName;
+    this.arguments = new MockArguments(args);
   }
 
   @Override
@@ -105,6 +110,11 @@ public class MockTransformContext implements TransformContext {
   }
 
   @Override
+  public Arguments getArguments() {
+    return arguments;
+  }
+
+  @Override
   public <T> Class<T> loadPluginClass(String pluginId) {
     return null;
   }
@@ -112,5 +122,19 @@ public class MockTransformContext implements TransformContext {
   @Override
   public <T> Lookup<T> provide(String table, Map<String, String> arguments) {
     return lookup.provide(table, arguments);
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String applicationId, String serviceId) {
+    //no-op
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public URL getServiceURL(String serviceId) {
+    //no-op
+    return null;
   }
 }

@@ -16,6 +16,7 @@
 
 package co.cask.cdap.etl.spark.batch;
 
+import co.cask.cdap.api.ServiceDiscoverer;
 import co.cask.cdap.api.data.DatasetInstantiationException;
 import co.cask.cdap.api.dataset.Dataset;
 import co.cask.cdap.api.metrics.Metrics;
@@ -23,6 +24,7 @@ import co.cask.cdap.api.plugin.PluginContext;
 import co.cask.cdap.etl.api.batch.BatchJoinerRuntimeContext;
 import co.cask.cdap.etl.api.batch.BatchRuntimeContext;
 import co.cask.cdap.etl.common.AbstractTransformContext;
+import co.cask.cdap.etl.common.BasicArguments;
 import co.cask.cdap.etl.planner.StageInfo;
 import co.cask.cdap.etl.spark.NoLookupProvider;
 
@@ -35,14 +37,11 @@ public class SparkBatchRuntimeContext extends AbstractTransformContext
   implements BatchRuntimeContext, BatchJoinerRuntimeContext {
 
   private final long logicalStartTime;
-  private final Map<String, String> runtimeArguments;
 
-  public SparkBatchRuntimeContext(PluginContext pluginContext, Metrics metrics,
-                                  long logicalStartTime, Map<String, String> runtimeArguments,
-                                  StageInfo stageInfo) {
-    super(pluginContext, metrics, NoLookupProvider.INSTANCE, stageInfo);
+  public SparkBatchRuntimeContext(PluginContext pluginContext, ServiceDiscoverer serviceDiscoverer, Metrics metrics,
+                                  long logicalStartTime, StageInfo stageInfo, BasicArguments arguments) {
+    super(pluginContext, serviceDiscoverer, metrics, NoLookupProvider.INSTANCE, stageInfo, arguments);
     this.logicalStartTime = logicalStartTime;
-    this.runtimeArguments = runtimeArguments;
   }
 
   @Override
@@ -52,7 +51,7 @@ public class SparkBatchRuntimeContext extends AbstractTransformContext
 
   @Override
   public Map<String, String> getRuntimeArguments() {
-    return runtimeArguments;
+    return arguments.asMap();
   }
 
   @Override

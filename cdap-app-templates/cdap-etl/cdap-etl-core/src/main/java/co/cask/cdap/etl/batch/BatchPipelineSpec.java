@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -39,9 +40,12 @@ public class BatchPipelineSpec extends PipelineSpec {
                             Resources driverResources,
                             Resources clientResources,
                             boolean stageLoggingEnabled,
+                            boolean processTimingEnabled,
                             List<ActionSpec> endingActions,
-                            int numOfRecordsPreview) {
-    super(stages, connections, resources, driverResources, clientResources, stageLoggingEnabled, numOfRecordsPreview);
+                            int numOfRecordsPreview,
+                            Map<String, String> properties) {
+    super(stages, connections, resources, driverResources, clientResources, stageLoggingEnabled, processTimingEnabled,
+          numOfRecordsPreview, properties);
     this.endingActions = ImmutableList.copyOf(endingActions);
   }
 
@@ -92,7 +96,8 @@ public class BatchPipelineSpec extends PipelineSpec {
 
     public BatchPipelineSpec build() {
       return new BatchPipelineSpec(stages, connections, resources, driverResources, clientResources,
-                                   stageLoggingEnabled, endingActions, numOfRecordsPreview);
+                                   stageLoggingEnabled, processTimingEnabled, endingActions,
+                                   numOfRecordsPreview, properties);
     }
   }
 }

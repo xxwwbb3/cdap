@@ -27,8 +27,10 @@ import co.cask.cdap.etl.proto.UpgradeableConfig;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -45,26 +47,31 @@ public class ETLConfig extends Config implements UpgradeableConfig {
   private final Resources driverResources;
   private final Resources clientResources;
   private final Boolean stageLoggingEnabled;
+  private final Boolean processTimingEnabled;
+  private final Integer numOfRecordsPreview;
+  private final Map<String, String> properties;
   // v1 fields to support backwards compatibility
   private final co.cask.cdap.etl.proto.v1.ETLStage source;
   private final List<co.cask.cdap.etl.proto.v1.ETLStage> sinks;
   private final List<co.cask.cdap.etl.proto.v1.ETLStage> transforms;
-  private final Integer numOfRecordsPreview;
 
   protected ETLConfig(Set<ETLStage> stages, Set<Connection> connections,
                       Resources resources, Resources driverResources, Resources clientResources,
-                      boolean stageLoggingEnabled, int numOfRecordsPreview) {
+                      boolean stageLoggingEnabled, boolean processTimingEnabled,
+                      int numOfRecordsPreview, Map<String, String> properties) {
     this.stages = Collections.unmodifiableSet(stages);
     this.connections = Collections.unmodifiableSet(connections);
     this.resources = resources;
     this.driverResources = driverResources;
     this.clientResources = clientResources;
     this.stageLoggingEnabled = stageLoggingEnabled;
+    this.processTimingEnabled = processTimingEnabled;
+    this.numOfRecordsPreview = numOfRecordsPreview;
+    this.properties = Collections.unmodifiableMap(properties);
     // these fields are only here for backwards compatibility
     this.source = null;
     this.sinks = new ArrayList<>();
     this.transforms = new ArrayList<>();
-    this.numOfRecordsPreview = numOfRecordsPreview;
   }
 
   public Set<ETLStage> getStages() {
@@ -93,6 +100,14 @@ public class ETLConfig extends Config implements UpgradeableConfig {
 
   public boolean isStageLoggingEnabled() {
     return stageLoggingEnabled == null ? true : stageLoggingEnabled;
+  }
+
+  public boolean isProcessTimingEnabled() {
+    return processTimingEnabled == null ? true : processTimingEnabled;
+  }
+
+  public Map<String, String> getProperties() {
+    return Collections.unmodifiableMap(properties == null ? new HashMap<String, String>() : properties);
   }
 
   /**
@@ -145,22 +160,6 @@ public class ETLConfig extends Config implements UpgradeableConfig {
   }
 
   @Override
-  public String toString() {
-    return "ETLConfig{" +
-      "stages=" + stages +
-      ", connections=" + connections +
-      ", resources=" + resources +
-      ", driverResources=" + driverResources +
-      ", clientResources=" + clientResources +
-      ", stageLoggingEnabled=" + stageLoggingEnabled +
-      ", source=" + source +
-      ", sinks=" + sinks +
-      ", transforms=" + transforms +
-      ", numOfRecordsPreview=" + numOfRecordsPreview +
-      "} " + super.toString();
-  }
-
-  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
@@ -173,15 +172,19 @@ public class ETLConfig extends Config implements UpgradeableConfig {
 
     return Objects.equals(stages, that.stages) &&
       Objects.equals(connections, that.connections) &&
-      Objects.equals(resources, that.resources) &&
-      Objects.equals(driverResources, that.driverResources) &&
-      Objects.equals(clientResources, that.clientResources) &&
-      isStageLoggingEnabled() == that.isStageLoggingEnabled();
+      Objects.equals(getResources(), that.getResources()) &&
+      Objects.equals(getDriverResources(), that.getDriverResources()) &&
+      Objects.equals(getClientResources(), that.getClientResources()) &&
+      Objects.equals(getProperties(), that.getProperties()) &&
+      isStageLoggingEnabled() == that.isStageLoggingEnabled() &&
+      isProcessTimingEnabled() == that.isProcessTimingEnabled() &&
+      getNumOfRecordsPreview() == that.getNumOfRecordsPreview();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(stages, resources, isStageLoggingEnabled());
+    return Objects.hash(stages, connections, getResources(), getDriverResources(), getClientResources(),
+                        isStageLoggingEnabled(), isProcessTimingEnabled(), getNumOfRecordsPreview(), getProperties());
   }
 
   @Override
@@ -192,6 +195,24 @@ public class ETLConfig extends Config implements UpgradeableConfig {
   @Override
   public UpgradeableConfig upgrade(UpgradeContext upgradeContext) {
     throw new UnsupportedOperationException("This is the latest config and cannot be upgraded.");
+  }
+
+  @Override
+  public String toString() {
+    return "ETLConfig{" +
+      "stages=" + stages +
+      ", connections=" + connections +
+      ", resources=" + resources +
+      ", driverResources=" + driverResources +
+      ", clientResources=" + clientResources +
+      ", stageLoggingEnabled=" + stageLoggingEnabled +
+      ", processTimingEnabled=" + processTimingEnabled +
+      ", numOfRecordsPreview=" + numOfRecordsPreview +
+      ", properties=" + properties +
+      ", source=" + source +
+      ", sinks=" + sinks +
+      ", transforms=" + transforms +
+      "} " + super.toString();
   }
 
   /**
@@ -206,8 +227,10 @@ public class ETLConfig extends Config implements UpgradeableConfig {
     protected Resources resources;
     protected Resources driverResources;
     protected Resources clientResources;
-    protected Boolean stageLoggingEnabled;
+    protected boolean stageLoggingEnabled;
+    protected boolean processTimingEnabled;
     protected int numOfRecordsPreview;
+    protected Map<String, String> properties;
 
     protected Builder() {
       this.stages = new HashSet<>();
@@ -216,6 +239,8 @@ public class ETLConfig extends Config implements UpgradeableConfig {
       this.driverResources = new Resources(1024, 1);
       this.clientResources = new Resources(1024, 1);
       this.stageLoggingEnabled = true;
+      this.processTimingEnabled = true;
+      this.properties = new HashMap<>();
     }
 
     public T addStage(ETLStage stage) {
@@ -260,6 +285,16 @@ public class ETLConfig extends Config implements UpgradeableConfig {
 
     public T disableStageLogging() {
       this.stageLoggingEnabled = false;
+      return (T) this;
+    }
+
+    public T disableProcessTiming() {
+      this.processTimingEnabled = false;
+      return (T) this;
+    }
+
+    public T setProperties(Map<String, String> properties) {
+      this.properties = new HashMap<>(properties);
       return (T) this;
     }
   }

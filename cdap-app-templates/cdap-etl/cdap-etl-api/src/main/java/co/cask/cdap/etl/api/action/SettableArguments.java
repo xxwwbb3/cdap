@@ -15,13 +15,16 @@
  */
 package co.cask.cdap.etl.api.action;
 
+import co.cask.cdap.etl.api.Arguments;
+
 import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
  * Provides access to the pipeline arguments which can be updated.
  */
-public interface SettableArguments extends Iterable<Map.Entry<String, String>> {
+public interface SettableArguments extends Arguments {
+
   /**
    * Returns true if specified argument is provided, otherwise false is returned.
    */
@@ -39,7 +42,7 @@ public interface SettableArguments extends Iterable<Map.Entry<String, String>> {
   void set(String name, String value);
 
   /**
-   * Returns an map that represents all arguments.
+   * Returns an unmodifiable map that represents all arguments.
    */
   Map<String, String> asMap();
 

@@ -67,7 +67,8 @@ public class ETLBatchApplication extends AbstractApplication<ETLBatchConfig> {
         .setExploreInputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat")
         .setExploreOutputFormat("org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat")
         .setTableProperty("avro.schema.literal", Constants.ERROR_SCHEMA.toString())
-        .build());
+        .build(),
+      config.getEngine());
 
     BatchPipelineSpec spec = specGenerator.generateSpec(config);
 
@@ -81,7 +82,7 @@ public class ETLBatchApplication extends AbstractApplication<ETLBatchConfig> {
       throw new IllegalArgumentException("Invalid pipeline. There must only be one source.");
     }
 
-    PipelinePlanner planner = new PipelinePlanner(SUPPORTED_PLUGIN_TYPES,
+    PipelinePlanner planner = new PipelinePlanner(SUPPORTED_PLUGIN_TYPES, ImmutableSet.<String>of(),
                                                   ImmutableSet.<String>of(), ImmutableSet.<String>of());
     PipelinePlan plan = planner.plan(spec);
 
@@ -99,8 +100,10 @@ public class ETLBatchApplication extends AbstractApplication<ETLBatchConfig> {
                                                            config.getDriverResources(),
                                                            config.getClientResources(),
                                                            config.isStageLoggingEnabled(),
+                                                           config.isProcessTimingEnabled(),
                                                            new HashMap<String, String>(),
-                                                           config.getNumOfRecordsPreview());
+                                                           config.getNumOfRecordsPreview(),
+                                                           config.getProperties());
         addMapReduce(new ETLMapReduce(batchPhaseSpec));
         break;
       case SPARK:
@@ -109,7 +112,9 @@ public class ETLBatchApplication extends AbstractApplication<ETLBatchConfig> {
                                             config.getDriverResources(),
                                             config.getClientResources(),
                                             config.isStageLoggingEnabled(),
-                                            new HashMap<String, String>(), config.getNumOfRecordsPreview());
+                                            config.isProcessTimingEnabled(),
+                                            new HashMap<String, String>(), config.getNumOfRecordsPreview(),
+                                            config.getProperties());
         addSpark(new ETLSpark(batchPhaseSpec));
         break;
       default:
