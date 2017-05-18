@@ -40,6 +40,10 @@ Don't import this until it has been fixed!
 
 /* -- General -- */
 
+.main-container.container {
+    margin-top: 80px;
+}
+
 body,html {
 	-moz-osx-font-smoothing: grayscale;
 	-ms-text-size-adjust: 100%;
@@ -48,10 +52,6 @@ body,html {
 	color: #212121;
 	font: 400 16px/24px Roboto, sans-serif;
 	text-size-adjust: 100%;
-}
-
-.main-container.container {
-    margin-top: 80px;
 }
 
 a {
@@ -63,6 +63,16 @@ p {
 	padding: 0;
 }
 
+li, li p {
+    margin: 8px 0;
+    padding: 0;
+}
+
+/* -- A page that starts with a list needs less padding-left -- */
+
+h1+ul.simple {
+    padding-left: 20px;
+}
 /* -- Header -- */
 
 .navbar-inverse {
@@ -332,7 +342,7 @@ h6 {
 }
 
 /* -- Literals ------------------------------------------ */
-/* -- Keep in sync these styles: pre tt ... ------------- */
+/* -- See also (and keep in sync) these styles: pre tt -- */
 
 .docutils.literal {
 	background: #f7f7f7;
@@ -342,17 +352,29 @@ h6 {
 	padding: 1px 4px;
 }
 
-.highlight.container {
-    overflow: scroll;
-    padding: 0;
-    width: 100%;
-}
-
 td .docutils.literal {
 	background: #f7f7f7;
 	border: 0;
 	border-radius: 0;
 	padding: 0;
+}
+
+pre {
+	background-color: #f7f7f7;
+	border-radius: 2px;
+	color: #37474f;
+	font: 14px/20px Roboto Mono, monospace;
+	margin: 16px 0;
+	overflow-x: auto;
+	padding: 8px;
+	position: relative;
+	border: none;
+}
+
+pre.literal-block {
+    word-break: keep-all;
+    word-wrap: normal;
+    white-space: pre;
 }
 
 tt {
@@ -362,22 +384,10 @@ tt {
 	font: 500 90%/1 Roboto Mono, monospace;
 }
 
-pre {
-	background-color: #f7f7f7;
-	border-radius: 2px;
-	border: none;
-	color: #37474f;
-	font: 14px/20px Roboto Mono, monospace;
-	margin: 16px 0;
-	overflow-x: auto;
-	padding: 8px;
-	position: relative;
-}
-
-pre.literal-block {
-    white-space: pre;
-    word-break: keep-all;
-    word-wrap: normal;
+.highlight.container {
+    width: 100%;
+    padding: 0;
+    overflow: scroll;
 }
 
 /* -- Images -- */
@@ -438,4 +448,29 @@ pre.literal-block {
 .table tbody tr.row-even,
 .table tbody tr.row-odd {
     background: rgba(255, 255, 255, .95);
+}
+
+/* -- Block Quotes -- */
+
+blockquote {
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    border-left: none;
+}
+
+li blockquote {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+li blockquote div ul.simple {
+    padding-left: 20px;
+}
+
+/* -- Lists in lists...  -- */
+/* Keep the same style of bullets (disc) -- */
+
+ul ul, ol ul {
+    list-style-type: disc;
 }
