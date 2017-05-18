@@ -33,10 +33,7 @@ color: #f7f7f7;
 
 @import url("cdap-bootstrap-fonts.css");
 
-/*
-Don't import this until it has been fixed!
-@import url("tabbed-parsed-literal.css");
- */
+@import url("tabbed-parsed-literal-0.2.css");
 
 /* -- General -- */
 
