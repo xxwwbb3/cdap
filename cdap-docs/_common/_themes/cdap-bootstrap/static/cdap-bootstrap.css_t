@@ -332,7 +332,7 @@ h6 {
 }
 
 /* -- Literals ------------------------------------------ */
-/* -- See also (and keep in sync) these styles: pre tt -- */
+/* -- Keep in sync these styles: pre tt ... ------------- */
 
 .docutils.literal {
 	background: #f7f7f7;
@@ -342,6 +342,12 @@ h6 {
 	padding: 1px 4px;
 }
 
+.highlight.container {
+    overflow: scroll;
+    padding: 0;
+    width: 100%;
+}
+
 td .docutils.literal {
 	background: #f7f7f7;
 	border: 0;
@@ -349,23 +355,29 @@ td .docutils.literal {
 	padding: 0;
 }
 
+tt {
+	color: #37474f;
+	font-family: Roboto Mono, monospace;
+	font-size: 1.2em;
+	font: 500 90%/1 Roboto Mono, monospace;
+}
+
 pre {
 	background-color: #f7f7f7;
 	border-radius: 2px;
+	border: none;
 	color: #37474f;
 	font: 14px/20px Roboto Mono, monospace;
 	margin: 16px 0;
 	overflow-x: auto;
 	padding: 8px;
 	position: relative;
-	border: none;
 }
 
-tt {
-	color: #37474f;
-	font-family: Roboto Mono, monospace;
-	font-size: 1.2em;
-	font: 500 90%/1 Roboto Mono, monospace;
+pre.literal-block {
+    white-space: pre;
+    word-break: keep-all;
+    word-wrap: normal;
 }
 
 /* -- Images -- */
