@@ -59,24 +59,6 @@
             return $('<div></div>').text(value).html();
         }
 
-        // Removes any elemsToClear HTML entities in an element before encoding ('a', 'span')
-        // <h2 id="firstH2"><a class="headerlink" href="#firstH2" title="Permalink">P</a>Lorem <span>Extra</span></h2>
-
-        function decodeHTML(elem) {
-            var elemHTML = elem.html();
-            var elemsToClear = ['a', 'span'];
-            for (var i = 0; i < elemsToClear.length; i++) {
-                var a = '<' + elemsToClear[i];
-                var b = '</' + elemsToClear[i] + '>';
-                var posA = elemHTML.indexOf(a);
-                var posB = elemHTML.indexOf(b);
-                if (posA != -1 && posB != -1) {
-                    elemHTML = elemHTML.substring(0, posA) + elemHTML.substring(posB + b.length);;
-                }
-            }
-            return $('<div></div>').text($.trim(elemHTML)).html();
-        }
-
         // Returns jQuery object of all headers between tH and bH, optionally starting at startingID
 
         function selectAllH() {
@@ -161,7 +143,7 @@
             ul += '<li class="nav dynamic-scrollspy-heading scrollspy-active"><a href="#">Contents</a></li>';
             selectAllH().each(function() {
                 var k = $(this).prop('id');
-                var dstext = decodeHTML($(this));
+                var dstext = encodeHTML($(this).text());
                 var lvl = Number($(this).prop('tagName').replace('H', ''));
                 var li = '<li id="dsli' + k + '" class="dynamic-scrollspy-title"><a href="#' + k + '">' + dstext + '</a>';
                 if (lvl < currentLevel) { // End current(s) and start new

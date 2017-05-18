@@ -58,7 +58,6 @@ a {
     color: #ff6600;
 }
 
-
 p {
 	margin: 16px 0;
 	padding: 0;
@@ -112,7 +111,7 @@ p {
 	transition: color .2s;
 }
 
-.navbar-search-image::before {
+.navbar-search-image:before {
     content: 'search';
 }
 
@@ -124,7 +123,6 @@ form.navbar-form.navbar-right input.form-control {
     background: #999999;
 }
 
-
 /* -- Placeholder color -- */
 
 .form-control::-webkit-input-placeholder {
@@ -132,12 +130,12 @@ form.navbar-form.navbar-right input.form-control {
 	transition: color .2s;
 }
 
-.form-control:-moz-placeholder {
+.form-control::-moz-placeholder {
 	color: white;
 	transition: color .2s;
 }
 
-.form-control::-moz-placeholder {
+.form-control:-moz-placeholder {
 	color: white;
 	transition: color .2s;
 }
@@ -153,7 +151,7 @@ form.navbar-form.navbar-right input.form-control {
 	border-bottom: 2px solid transparent;
 	border-top: 2px solid transparent;
 	display: inline-block;
-	font: 500 14px/44px Roboto,sans-serif;
+	font: 500 14px/44px Roboto, sans-serif;
 	margin: 0;
 	padding: 0 24px;
 	padding-top: 0px;
@@ -253,7 +251,6 @@ nav.pagenav {
     max-height: calc(100% - 100px - 90px);
 }
 
-
 /* -- Footer -- */
 
 .footer {
@@ -272,30 +269,29 @@ nav.pagenav {
     text-align: right;
 }
 
-
 /* ============ General ============ */
 
 /* -- Page Section Head Perma-Links -- */
 
-.headerlink:hover {
+h1:hover .headerlink:before,
+h2:hover .headerlink:before,
+h3:hover .headerlink:before,
+h4:hover .headerlink:before,
+h5:hover .headerlink:before,
+h6:hover .headerlink:before {
 	visibility: visible;
-	text-decoration: none;
 }
 
 a.headerlink {
-    visibility: hidden;
+    text-decoration: none;
 }
 
-
-a.headerlink::before {
-	font: 16px/20px Roboto, sans-serif;
+a.headerlink:before {
 	content: '\1F517';
-	/*
-    font-size: 0.8em;
- */
-
+	font: 16px/20px Roboto, sans-serif;
 	margin-left: -24px;
 	padding-right: 3px;
+	visibility: hidden;
 }
 
 /* -- Page Section Heads -- */
@@ -321,17 +317,17 @@ h3 {
 }
 
 h4 {
-	font: 400 18px/32px Roboto,sans-serif;
+	font: 400 18px/32px Roboto, sans-serif;
 	margin: 32px 0 16px;
 }
 
 h5 {
-	font: 700 16px/24px Roboto,sans-serif;
+	font: 700 16px/24px Roboto, sans-serif;
 	margin: 32px 0 16px;
 }
 
 h6 {
-	font: 500 16px/24px Roboto,sans-serif;
+	font: 500 16px/24px Roboto, sans-serif;
 	margin: 32px 0 16px;
 }
 
@@ -342,7 +338,7 @@ h6 {
 	background: #f7f7f7;
 	border-radius: 3px;
 	color: #37474f;
-	font: 500 90%/1 Roboto Mono,monospace;
+	font: 500 90%/1 Roboto Mono, monospace;
 	padding: 1px 4px;
 }
 
@@ -367,9 +363,9 @@ pre {
 
 tt {
 	color: #37474f;
-	font-family: Roboto Mono,monospace;
+	font-family: Roboto Mono, monospace;
 	font-size: 1.2em;
-	font: 500 90%/1 Roboto Mono,monospace;
+	font: 500 90%/1 Roboto Mono, monospace;
 }
 
 /* -- Images -- */
