@@ -329,7 +329,7 @@ public abstract class DistributedProgramRunner implements ProgramRunner {
 
           // Add dependencies
           twillPreparer
-            .withDependencies(HBaseTableUtilFactory.getHBaseTableUtilClass())
+            .withDependencies(HBaseTableUtilFactory.getHBaseTableUtilClass(cConf))
             .withDependencies(new HBaseDDLExecutorFactory(cConf, hConf).get().getClass());
           addKMSSecureStoreClass(cConf, twillPreparer);
 
