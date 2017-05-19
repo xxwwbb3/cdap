@@ -624,8 +624,7 @@ html_static_path = ['../../_common/_static']
 #      ],}
 
 html_sidebars = {'**': [
-    'manuals.html',
-    'casksites.html',
+    'cdap-manuals.html',
      ],}
 
 # Additional templates that should be rendered to pages, maps page names to

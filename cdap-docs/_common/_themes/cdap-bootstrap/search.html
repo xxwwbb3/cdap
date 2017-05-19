@@ -1,21 +1,20 @@
 {#
-    basic/search.html
-    ~~~~~~~~~~~~~~~~~
+    search.html
+    ~~~~~~~~~~~
 
     Template for the search page.
 
-    :copyright: Copyright 2007-2013 by the Sphinx team, see AUTHORS.
-    :license: BSD, see LICENSE for details.
+    :copyright: Copyright 2017 Cask Data, Inc.
+    :license: Apache 2.0 License, see LICENSE for details.
 #}
 {%- extends "layout.html" %}
 {% set title = _('Search') %}
-{% set script_files = script_files + ['_static/searchtools.js'] %}
 {% block extrahead %}
-  <script type="text/javascript">
-    jQuery(function() { Search.loadIndex("{{ pathto('searchindex.js', 1) }}"); });
-  </script>
-  {# this is used when loading the search index using $.ajax fails,
-     such as on Chrome for documents on localhost #}
+{# Hide extra navigation on search result page #}
+  <link rel="stylesheet" href="{{ pathto('_static/hide-nav.css', 1) }}" type="text/css" />
+{# Google search result CSS #}
+  <link rel="stylesheet" href="{{ pathto('_static/cdap-google-search.css', 1) }}" type="text/css" />
+{# this is used when loading the search index using $.ajax fails, such as on Chrome for documents on localhost #}
   <script type="text/javascript" id="searchindexloader"></script>
   {{ super() }}
 {% endblock %}
@@ -29,43 +28,29 @@
   </p>
   </div>
   <p>
-    {% trans %}From here you can search these documents. Enter your search
-    words into the box below and click "search". Note that the search
-    function will automatically search for all of the words. Pages
-    containing fewer words won't appear in the result list.{% endtrans %}
+  Enter your search term(s) to search the documentation:
   </p>
-
-  {% if theme_bootstrap_version == "3" %}
-  <form class="form-inline" action="" method="get">
-    <div class="form-group">
-      <input type="text" class="form-control" name="q" value="" />
-    </div>
-    <input type="submit" class="btn btn-default" value="{{ _('search') }}" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>  
-  {% else %}
-  <form class="form-search">
-    <input type="text" class="input-medium search-query" name="q" value="" />
-    <input type="submit" class="btn btn-default" value="{{ _('search') }}" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>
-  {% endif %}
-  
-  {% if search_performed %}
-    <h2>{{ _('Search Results') }}</h2>
-    {% if not search_results %}
-      <p>{{ _('Your search did not match any documents. Please make sure that all words are spelled correctly and that you\'ve selected enough categories.') }}</p>
-    {% endif %}
-  {% endif %}
-  <div id="search-results">
-  {% if search_results %}
-    <ul>
-    {% for href, caption, context in search_results %}
-      <li><a href="{{ pathto(item.href) }}">{{ caption }}</a>
-        <div class="context">{{ context|e }}</div>
-      </li>
-    {% endfor %}
-    </ul>
-  {% endif %}
+  <div id="google-search-results">
+<script>
+  (function() {
+    var cx;
+    try {
+      cx = localStorage.gcseID;
+    } catch(e) {
+      console.log("Unable to set Google Custom Search Engine from local storage");
+      return;
+    }
+    if ( cx === "DEFAULT_GCSE_ID") {
+      cx = "002451258715120217843:nkzqh6x__gy";
+    }
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = 'https://cse.google.com/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
+<gcse:search></gcse:search>
   </div>
 {% endblock %}

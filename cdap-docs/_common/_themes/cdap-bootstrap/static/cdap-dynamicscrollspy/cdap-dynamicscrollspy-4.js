@@ -137,31 +137,36 @@
         // Builds the list
 
         function makeList() {
-            var currentLevel = self.options.tH;
-            var inList = false;
-            var ul = '<ul class="nav dynamic-scrollspy ' + self.options.ulClassNames + '">';
-            ul += '<li class="nav dynamic-scrollspy-heading scrollspy-active"><a href="#">Contents</a></li>';
-            selectAllH().each(function() {
-                var k = $(this).prop('id');
-                var dstext = encodeHTML($(this).text());
-                var lvl = Number($(this).prop('tagName').replace('H', ''));
-                var li = '<li id="dsli' + k + '" class="dynamic-scrollspy-title"><a href="#' + k + '">' + dstext + '</a>';
-                if (lvl < currentLevel) { // End current(s) and start new
-                    ul += '</li></ul>'.repeat(currentLevel - lvl) + li;
-                } else if (lvl === currentLevel) {
-                    if (inList) {
-                        ul += '</li>' + li;
-                    } else {
-                        ul += li;
-                        inList = true;
+            var selectAllHs = selectAllH();
+            if (selectAllHs.length == 0) {
+                return;
+            } else {
+                var currentLevel = self.options.tH;
+                var inList = false;
+                var ul = '<ul class="nav dynamic-scrollspy ' + self.options.ulClassNames + '">';
+                ul += '<li class="nav dynamic-scrollspy-heading scrollspy-active"><a href="#">Contents</a></li>';
+                selectAllHs.each(function() {
+                    var k = $(this).prop('id');
+                    var dstext = encodeHTML($(this).text());
+                    var lvl = Number($(this).prop('tagName').replace('H', ''));
+                    var li = '<li id="dsli' + k + '" class="dynamic-scrollspy-title"><a href="#' + k + '">' + dstext + '</a>';
+                    if (lvl < currentLevel) { // End current(s) and start new
+                        ul += '</li></ul>'.repeat(currentLevel - lvl) + li;
+                    } else if (lvl === currentLevel) {
+                        if (inList) {
+                            ul += '</li>' + li;
+                        } else {
+                            ul += li;
+                            inList = true;
+                        }
+                    } else { // lvl > currentLevel ; should always go up in increments
+                        ul += '<ul class="nav child dynamic-scrollspy-list" >' + li;
                     }
-                } else { // lvl > currentLevel ; should always go up in increments
-                    ul += '<ul class="nav child dynamic-scrollspy-list" >' + li;
-                }
-                currentLevel = lvl;
-            });
-            ul += '</li></ul>';
-            self.append($(ul));
+                    currentLevel = lvl;
+                });
+                ul += '</li></ul>';
+                self.append($(ul));
+            }
         }
 
         // Initialize plugin

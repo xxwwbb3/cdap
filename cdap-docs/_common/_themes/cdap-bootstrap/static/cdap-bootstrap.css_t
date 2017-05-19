@@ -14,7 +14,7 @@
 Color Scheme
 
 Cask Orange:
-color: #ff6600;
+color: #FF6600;
 
 Background Dark:   Grey_03
 color: #666666;
@@ -25,9 +25,14 @@ color: #999999;
 Background Light:  Grey_05
 color: #CCCCCC;
 
+Background Mid Light:
+color: rgb(240, 240, 240);
+color: #F0F0F0;
+background for literals
+
 Background Extra Light:
-color: #f7f7f7;
-    Left Sidebar
+color: #F7F7F7;
+background for Left Sidebar
 
 */
 
@@ -52,7 +57,7 @@ body,html {
 }
 
 a {
-    color: #ff6600;
+    color: #FF6600;
 }
 
 p {
@@ -67,9 +72,10 @@ li, li p {
 
 /* -- A page that starts with a list needs less padding-left -- */
 
-h1+ul.simple {
+div.row > div.content > div.section > ul.simple {
     padding-left: 20px;
 }
+
 /* -- Header -- */
 
 .navbar-inverse {
@@ -87,8 +93,8 @@ h1+ul.simple {
 }
 
 .navbar-text.navbar-version.pull-left {
-	color: #fff;
-	font: 20px/36px Roboto, sans-serif;
+	color: white;
+	font: 16px/42px Roboto, sans-serif;
 	letter-spacing: 0;
 	margin-top: 5px;
 	margin-bottom: 0px;
@@ -167,16 +173,16 @@ form.navbar-form.navbar-right input.form-control {
 }
 
 .docsite-nav-tab-link:hover,.docsite-nav-tab-link:focus {
-	color: #fff;
+	color: white;
 	text-decoration: none;
 }
 
 .docsite-nav-tab-link-active {
-	border-bottom-color: #fff;
-	color: #fff;
+	border-bottom-color: white;
+	color: white;
 }
 
-.navbar-inverse .navbar-nav>li>a {
+.navbar-inverse .navbar-nav > li > a {
 	color: rgba(255,255,255,.7);
 	padding-bottom: 11px;
 	padding-top: 11px;
@@ -186,7 +192,7 @@ form.navbar-form.navbar-right input.form-control {
 
 #sidebar.bs-sidenav {
 	border-radius: 2px;
-	background-color: #f7f7f7;
+	background-color: #F7F7F7;
 	font-size: 13px;
 	line-height: 16px;
 	margin-bottom: 0;
@@ -210,14 +216,16 @@ form.navbar-form.navbar-right input.form-control {
 }
 
 #sidebar a {
+	color: #212121;
 	padding-left: 0;
 	padding-right: 0;
 }
 
 #sidebar a:hover {
 	background-color: transparent;
-	color: #ff6600;
 	border-right: 0;
+	color: #FF6600;
+	text-decoration: none;
 }
 
 @media screen and (min-width: 1200px) {
@@ -228,27 +236,16 @@ form.navbar-form.navbar-right input.form-control {
     }
 }
 
-nav.pagenav {
+nav.pagenav,
+.toctree-l2,
+.toctree-l3 {
     padding-left: 10px;
 }
 
-.toctree-l2 {
-    padding-left: 10px;
-}
-
-.toctree-l1.current>a.reference.internal {
-    font-weight: 500;
-    font-weight: bolder;
-}
-
-.toctree-l1.current>a.current.reference.internal {
-    font-weight: 500;
-    font-weight: bolder;
-    color:#ff6600;
-}
-
-.toctree-l2.current>a.current.reference.internal {
-    color:#ff6600;
+.toctree-l1.current > a.reference.internal,
+.toctree-l2.current > a.reference.internal,
+.toctree-l3.current > a.reference.internal {
+    font-weight: bold;
 }
 
 /* -- Page Nav Scroll Spy (Right Sidebar)             -- */
@@ -340,27 +337,29 @@ h6 {
 
 /* -- Literals ------------------------------------------ */
 /* -- See also (and keep in sync) these styles: pre tt -- */
+/* -- was font: 500 90%/1 Roboto Mono, monospace;      -- */
+/* -- was background-color: #F0F0F0;                   -- */
 
 .docutils.literal {
-	background: #f7f7f7;
+	background: #F0F0F0;
 	border-radius: 3px;
 	color: #37474f;
-	font: 500 90%/1 Roboto Mono, monospace;
+    font: 100%/1 monospace;
 	padding: 1px 4px;
 }
 
 td .docutils.literal {
-	background: #f7f7f7;
+	background: #F0F0F0;
 	border: 0;
 	border-radius: 0;
 	padding: 0;
 }
 
 pre {
-	background-color: #f7f7f7;
+	background-color: #F1F6F8;
 	border-radius: 2px;
 	color: #37474f;
-	font: 14px/20px Roboto Mono, monospace;
+	font: 14px/20px monospace;
 	margin: 16px 0;
 	overflow-x: auto;
 	padding: 8px;
@@ -375,10 +374,10 @@ pre.literal-block {
 }
 
 tt {
-	color: #37474f;
-	font-family: Roboto Mono, monospace;
+	color: #37474F;
+	font-family: monospace;
 	font-size: 1.2em;
-	font: 500 90%/1 Roboto Mono, monospace;
+	font: 100%/1 monospace;
 }
 
 .highlight.container {
@@ -419,7 +418,7 @@ tt {
 }
 
 .table.table thead {
-    color: #fff;
+    color: white;
     font: 500 16px/24px Roboto, sans-serif;
     height: 48px;
     padding: 8px;
@@ -470,4 +469,10 @@ li blockquote div ul.simple {
 
 ul ul, ol ul {
     list-style-type: disc;
+}
+
+/* -- Special Divs -- */
+
+div.topic {
+    background-color: #eee;
 }
