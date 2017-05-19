@@ -77,7 +77,7 @@ public class ExploreServiceUtils {
     HIVE_CDH5_2(Pattern.compile("^.*cdh5.2\\..*$"), Hive13ExploreService.class),
     HIVE_CDH5_3(Pattern.compile("^.*cdh5.3\\..*$"), Hive13ExploreService.class),
     // CDH > 5.3 uses Hive >= 1.1 (which Hive14ExploreService supports)
-    HIVE_CDH5(Pattern.compile("^.*cdh5\\..*$"), Hive14ExploreService.class),
+//    HIVE_CDH5(Pattern.compile("^.*cdh5\\..*$"), Hive14ExploreService.class),
     // Current latest CDH version uses Hive >= 1.1. Need to update HIVE_CDH_LATEST when newer CDH version is added.
     HIVE_CDH_LATEST(null, Hive14ExploreService.class),
 

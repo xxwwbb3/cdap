@@ -44,7 +44,7 @@ public class HBaseVersion {
   private static final String CDH58_CLASSIFIER = "cdh5.8.";
   private static final String CDH59_CLASSIFIER = "cdh5.9.";
   private static final String CDH510_CLASSIFIER = "cdh5.10.";
-  private static final String CDH511_CLASSIFIER = "cdh5.11.";
+  private static final String CDH511_CLASSIFIER = "cdh5.10.";
   private static final String CDH_CLASSIFIER = "cdh";
 
   private static final Logger LOG = LoggerFactory.getLogger(HBaseVersion.class);
