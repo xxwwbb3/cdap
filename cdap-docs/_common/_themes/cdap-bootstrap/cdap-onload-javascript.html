@@ -1,0 +1,32 @@
+<script type='text/javascript'>
+(function ($) {
+    $('#localtoc-scrollspy').DynamicScrollSpy({
+      genIDs: true,
+      startingID: '#main-content',
+      testing: false,
+      ulClassNames: 'hidden-print page-nav',
+      offset: 140
+    });
+
+    $('.scrollable-x').mCustomScrollbar({
+      axis: 'x',
+      theme: 'minimal-dark'
+    });
+
+    $('pre').mCustomScrollbar({
+      axis: 'x',
+      theme: 'minimal-dark'
+    });
+
+    $(window).resize(function(){
+        var winH = $(window).height();
+        var winST = $(window).scrollTop();
+        var footerOH = $('footer.footer').outerHeight();
+        var maxSidebar = winH - winST - $('#sidebar').offset().top - footerOH;
+        if ($('#sidebar').height() > maxSidebar) {
+          $('#sidebar').height(maxSidebar);
+        }
+    });
+
+}(window.$jqTheme || window.jQuery));
+</script>

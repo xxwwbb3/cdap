@@ -365,9 +365,12 @@ pre {
 	padding: 8px;
 	position: relative;
 	border: none;
+    word-break: keep-all;
+    word-wrap: normal;
+    white-space: pre;
 }
 
-pre.literal-block {
+code.docutils.literal {
     word-break: keep-all;
     word-wrap: normal;
     white-space: pre;
@@ -411,7 +414,42 @@ tt {
     width: 100%;
 }
 
+/* -- Block Quotes -- */
+
+blockquote {
+    padding: 0;
+    margin: 0;
+    font-size: inherit;
+    border-left: none;
+}
+
+li blockquote {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+li blockquote div ul.simple {
+    padding-left: 20px;
+}
+
+/* -- Lists in lists...  -- */
+/* Keep the same style of bullets (disc) -- */
+
+ul ul, ol ul {
+    list-style-type: disc;
+}
+
+/* -- Special Divs -- */
+
+div.topic {
+    background-color: #eee;
+}
+
 /* -- Tables -- */
+
+table {
+    table-layout: fixed;
+}
 
 .table.table {
     background: #666666;
@@ -446,33 +484,154 @@ tt {
     background: rgba(255, 255, 255, .95);
 }
 
-/* -- Block Quotes -- */
+/* -- General Table styles --------------------------------------------- */
 
-blockquote {
-    padding: 0;
-    margin: 0;
-    font-size: inherit;
-    border-left: none;
+.table.table {
+    background-color: white;
+    margin-left: 0%;
+    margin-right: 0%;
+    width: 100%;
 }
 
-li blockquote {
+table.docutils p.first {
+    line-height: 1.3em;
+}
+
+table.docutils p.last {
+    line-height: 1.3em;
+    margin-bottom: 0;
+}
+
+table.docutils tbody td p {
+    line-height: 1.3em;
+}
+
+table.docutils td, table.docutils th {
+    padding-left: 15px;
+}
+
+ul.first.last.simple li {
+    line-height: 1.5em;
+}
+
+/* -- Table styles used in Introduction page -------------------------------------- */
+
+div.table-block.container {
+    border-color: #aaa;
+    border-style: solid;
+    border-width: 1px;
+    margin-bottom: 40px;
+    margin-left: 15px;
+    margin-top: 20px;
+    width:100%;
+}
+
+/* -- Background and Border colors -------------------------------------- */
+
+/* Make first table dark background */
+
+div.table-block.container table.docutils tr.row-odd {
+    background-color: #E4E7F0;
+}
+
+/* -- Triple-table ------------------------------- */
+
+/* Triple-table: Make even row with white border */
+
+div.table-block.container table.triple-table.docutils tr.row-even td {
+    border-bottom: 1px solid white;
+}
+
+div.table-block.container table.triple-table.docutils th.stub {
+    border-bottom: 1px solid white;
+    padding-top: 8px;
+}
+
+/* Triple-table: Make odd row with white background */
+
+div.table-block.container table.triple-table.docutils tr.row-odd {
+    background-color: white;
+}
+
+div.table-block.container table.triple-table.docutils tr.row-odd th.stub {
+    border-bottom: 1px solid #aaa;
+}
+
+/* Triple-table: Make first row light-grey background with bottom border */
+
+div.table-block.container table.triple-table.docutils tr:first-of-type {
+    background-color: #F9FAFB;
+}
+
+div.table-block.container table.triple-table.docutils tr:first-of-type th.stub {
+    border-bottom: 1px solid #aaa;
+    padding-top: 8px;
+}
+
+div.table-block.container table.triple-table.docutils ul.first.last.simple {
+    padding-top: 6px;
+}
+
+/* -- Table styles used on RESTful pages -------------------------------------- */
+
+div.table-block-example.container {
+    border-color: #aaa;
+    border-style: solid;
+    border-width: 1px;
+    margin-bottom: 30px;
     margin-left: 0;
-    margin-right: 0;
+    margin-top: 20px;
 }
 
-li blockquote div ul.simple {
-    padding-left: 20px;
+div.table-block-example.container table.docutils tr.row-odd {
+    background-color: #E4E7F0;
 }
 
-/* -- Lists in lists...  -- */
-/* Keep the same style of bullets (disc) -- */
+/* -- Triple-table: Make even row with white border --------------------------- */
 
-ul ul, ol ul {
-    list-style-type: disc;
+div.table-block-example.container table.triple-table.docutils tr.row-even td {
+    border-bottom: 1px solid white;
 }
 
-/* -- Special Divs -- */
+div.table-block-example.container table.triple-table.docutils th.stub {
+    border-bottom: 1px solid white;
+}
 
-div.topic {
-    background-color: #eee;
+/* -- Triple-table: Make odd row with white background */
+
+div.table-block-example.container table.triple-table.docutils tr.row-odd {
+    background-color: white;
+}
+
+div.table-block-example.container table.triple-table.docutils tr.row-odd th.stub {
+    border-bottom: 1px solid #aaa;
+}
+
+/* -- Triple-table: Make first row light-grey background with bottom border */
+
+div.table-block-example.container table.triple-table.docutils tr:first-of-type {
+    background-color: #F9FAFB;
+}
+
+div.table-block-example.container table.triple-table.docutils tr:first-of-type th.stub {
+    border-bottom: 1px solid #aaa;
+}
+
+/* -- Triple-table: Introduction section -- */
+
+table.triple-table.table > tbody > tr > td {
+    max-width: 630px;
+}
+
+table.triple-table.table > tbody > tr > td > ul {
+    overflow: auto;
+}
+
+table.triple-table.table .docutils.literal {
+    white-space: normal;
+}
+
+div.table-block.container > table:not(.triple-table) > tbody > tr:first-of-type > td,
+div.table-block.container > table:not(.triple-table) > tbody > tr:first-of-type > th {
+    border-top: 0;
 }

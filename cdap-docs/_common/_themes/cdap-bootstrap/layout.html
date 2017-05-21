@@ -10,8 +10,9 @@
     '_static/bootstrap-' + bootstrap_version + '/css/bootstrap.min.css',
     '_static/bootstrap-' + bootstrap_version + '/css/bootstrap-theme.min.css',
     '_static/bootstrap-sphinx.css',
-    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy-4.css',
-    '_static/tabbed-parsed-literal-0.2.css' ] %}
+    '_static/cdap-dynamicscrollspy-4.css',
+    '_static/jquery.mCustomScrollbar.css'
+ ] %}
 {# Hide table-of-contents on pages, by setting in the top field list :hide-toc: true #}
 {%- set hidetoc = '' %}
 {%- set hidetoc_key = 'hide-toc' %}
@@ -38,14 +39,13 @@
 
 {% set css_files = css_files + theme_css_files + theme_cdap_bootstrap_custom_css %}
 {% set script_files = script_files + [
-    '_static/js/jquery-1.11.0.min.js',
-    '_static/js/jquery-fix.js',
     '_static/bootstrap-' + bootstrap_version + '/js/bootstrap.min.js',
     '_static/bootstrap-sphinx.js',
-    '_static/cdap-dynamicscrollspy/cdap-dynamicscrollspy-4.js',
-    '_static/tabbed-parsed-literal-0.2.js',
-    '_static/copy-to-clipboard.js' ] %}
-
+    '_static/cdap-dynamicscrollspy-4.js',
+    '_static/copy-to-clipboard.js',
+    '_static/jquery.mCustomScrollbar.concat.min.js',
+    '_static/tabbed-parsed-literal-0.2.js'
+] %}
 {%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
 {%- set bs_content_width = render_sidebar and "8" or "12"%}
 
@@ -164,8 +164,7 @@
 {{ script() }}
 {%- endif %}
 {{ headerlinktags() }}
-{# Block overshadowed in other layouts to add headers #}
-{% block extrahead %}{% endblock %}
+{% block extrahead %}{% endblock %}{# Block overshadowed in other layouts to add headers #}
 </head>
 <body role="document">
 {{ googletagmanagerbody() }}
@@ -180,17 +179,6 @@
     {% block sidebar2 %}{{ right_sidebar() }}{% endblock %}
   </div>
 </div>
-<script type="text/javascript">
-(function ($) {
-    $('#localtoc-scrollspy').DynamicScrollSpy({
-      genIDs: true,
-      startingID: '#main-content',
-      testing: false,
-      ulClassNames: 'hidden-print page-nav',
-      offset: 140
-    });
-}(window.$jqTheme || window.jQuery));
-</script>
 <!-- block content end -->
 
 <!-- block footer -->
@@ -234,5 +222,6 @@
       </div>
     </footer>
 <!-- block footer end -->
+{% include "cdap-onload-javascript.html" %}
   </body>
 </html>
