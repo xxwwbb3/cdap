@@ -59,14 +59,14 @@ jQuery(document).ready(function() {
         if (tabsets.hasOwnProperty(tabSetID)) {
           var tab = tabsets[tabSetID];
           var tabs = $(CLASSNAME_TP + tabSetID + ' .example-tab-' + tab);
-          if (tab && tabs) {
+          if (tab != '' && (tabs.length > 0)) {
             try {
               tabs[0].click(changeExampleTab(tab));
             } catch (e) {
               console.log('Unable to set using local storage: ' + tab);
             }
-          } else {
-            console.log('Unable to set using local storage (no tabs): ' + tab);
+//           } else {
+//             console.log('Unable to set using local storage (no tabs): ' + tab);
           }
         }
       }

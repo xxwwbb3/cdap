@@ -124,11 +124,14 @@ table.field-list {
 
 /* The code below is based on the bootstrap website sidebar */
 
+/*
 .bs-sidenav.affix {
   position: static;
 }
+ */
 
 /* First level of nav */
+/*
 .bs-sidenav {
   margin-top: 30px;
   margin-bottom: 30px;
@@ -138,6 +141,7 @@ table.field-list {
   background-color: #f7f5fa;
   border-radius: 5px;
 }
+ */
 
 /* All levels of nav */
 .bs-sidenav .nav > li > a {
@@ -182,20 +186,29 @@ table.field-list {
 }
 
 /* Show and affix the side nav when space allows it */
+/*
 @media screen and (min-width: 992px) {
   .bs-sidenav .nav > .active > ul {
     display: block;
   }
+ */
   /* Widen the fixed sidenav */
+/*
   .bs-sidenav.affix,
   .bs-sidenav.affix-bottom {
     width: 213px;
   }
+ */
+  /* Undo the static from mobile first approach */
+/*
   .bs-sidenav.affix {
-    position: fixed; /* Undo the static from mobile first approach */
+    position: fixed;
   }
+ */
+  /* Undo the static from mobile first approach */
+/*
   .bs-sidenav.affix-bottom {
-    position: absolute; /* Undo the static from mobile first approach */
+    position: absolute;
   }
   .bs-sidenav.affix-bottom .bs-sidenav,
   .bs-sidenav.affix .bs-sidenav {
@@ -203,13 +216,16 @@ table.field-list {
     margin-bottom: 0;
   }
 }
-@media screen and (min-width: 1200px) {
+ */
   /* Widen the fixed sidenav again */
+/*
+@media screen and (min-width: 1200px) {
   .bs-sidenav.affix-bottom,
   .bs-sidenav.affix {
     width: 263px;
   }
 }
+ */
 
 
 {% else %}

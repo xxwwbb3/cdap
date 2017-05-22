@@ -11,7 +11,8 @@
     '_static/bootstrap-' + bootstrap_version + '/css/bootstrap-theme.min.css',
     '_static/bootstrap-sphinx.css',
     '_static/cdap-dynamicscrollspy-4.css',
-    '_static/jquery.mCustomScrollbar.css'
+    '_static/jquery.mCustomScrollbar.css',
+    '_static/cdap-jquery.mCustomScrollbar.css'
  ] %}
 {# Hide table-of-contents on pages, by setting in the top field list :hide-toc: true #}
 {%- set hidetoc = '' %}
@@ -43,14 +44,13 @@
     '_static/bootstrap-sphinx.js',
     '_static/cdap-dynamicscrollspy-4.js',
     '_static/copy-to-clipboard.js',
-    '_static/jquery.mCustomScrollbar.concat.min.js',
+    '_static/jquery.mCustomScrollbar.js',
     '_static/tabbed-parsed-literal-0.2.js'
 ] %}
 {%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
 {%- set bs_content_width = render_sidebar and "8" or "12"%}
 
-{%- macro googletagmanager() %}
-{%- if html_google_tag_manager_code is defined %}
+{%- macro googletagmanager() %}{%- if html_google_tag_manager_code is defined %}
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -61,8 +61,7 @@
 {%- endif %}
 {%- endmacro %}
 
-{%- macro googletagmanagerbody() %}
-{%- if html_google_tag_manager_code is defined %}
+{%- macro googletagmanagerbody() %}{%- if html_google_tag_manager_code is defined %}
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ html_google_tag_manager_code }}"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -130,7 +129,7 @@
 {%- macro left_sidebar() %}
     {%- if render_sidebar %}
     <div class="{{ bs_span_prefix }}2">
-      <div id="sidebar" class="bs-sidenav" role="complementary">
+      <div id="sidebar" class="bs-sidenav scrollable-y" role="complementary">
         {%- for sidebartemplate in sidebars %}
           {%- include sidebartemplate %}
         {%- endfor %}
@@ -222,6 +221,7 @@
       </div>
     </footer>
 <!-- block footer end -->
-{% include "cdap-onload-javascript.html" %}
+
+<script type="text/javascript" src="{{ pathto('_static/cdap-onload-javascript.js', 1) }}"></script>
   </body>
 </html>

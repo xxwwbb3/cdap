@@ -10,8 +10,6 @@
 {%- extends "layout.html" %}
 {% set title = _('Search') %}
 {% block extrahead %}
-{# Hide extra navigation on search result page #}
-  <link rel="stylesheet" href="{{ pathto('_static/hide-nav.css', 1) }}" type="text/css" />
 {# Google search result CSS #}
   <link rel="stylesheet" href="{{ pathto('_static/cdap-google-search.css', 1) }}" type="text/css" />
 {# this is used when loading the search index using $.ajax fails, such as on Chrome for documents on localhost #}

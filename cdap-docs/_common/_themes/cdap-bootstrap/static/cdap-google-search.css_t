@@ -35,15 +35,60 @@ div.gsc-orderby {
 }
 
 a.gs-title,
+div.gcsc-branding-text,
 div.gsc-cursor-page,
-table.gsc-table-result,
-div.gsc-result-info,
 div.gsc-orderby-label.gsc-inline-block,
-td.gcsc-branding-text,
-div.gcsc-branding-text {
-    font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+div.gsc-result-info,
+table.gsc-table-result,
+td.gcsc-branding-text {
+    font-family: Roboto, sans-serif;
 }
 
 .gs-title {
     line-height: 1em;
+}
+
+#gsc-iw-id1 {
+    height: 40px;
+}
+
+#gs_tti50 {
+    font: 400 16px/24px Roboto, sans-serif;
+}
+
+input#gsc-i-id1.gsc-input {
+    height: 2em;
+}
+
+.gsib_b {
+    padding-top: 4px;
+    text-align: left;
+    width: 28px;
+}
+
+.gsc-search-button {
+    border-collapse: separate;
+    text-align: left;
+    width: 10%;
+}
+
+.gsc-search-button.gsc-search-button-v2 {
+    box-sizing: content-box;
+}
+
+.gsc-table-cell-thumbnail.gsc-thumbnail {
+    border-collapse: separate;
+    box-sizing: content-box;
+}
+.gs-bidi-start-align.gs-visibleUrl.gs-visibleUrl-long {
+    font-family: Roboto, sans-serif;
+    word-break: break-all;
+}
+
+.gs-bidi-start-align.gs-snippet {
+    font-family: Roboto, sans-serif;
+}
+
+td.gsc-table-cell-thumbnail.gsc-thumbnail:not([style="display:none"]) + td div.gs-bidi-start-align.gs-snippet {
+    margin-left: 60px;
 }

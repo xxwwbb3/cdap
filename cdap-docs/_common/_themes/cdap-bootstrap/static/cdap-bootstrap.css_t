@@ -195,9 +195,11 @@ form.navbar-form.navbar-right input.form-control {
 	background-color: #F7F7F7;
 	font-size: 13px;
 	line-height: 16px;
+	max-height: 100vh;
 	margin-bottom: 0;
 	margin-top: 0;
-	padding-top: 8;
+	overflow: auto;
+	padding-top: 8px;
 	padding-bottom: 16px;
 	padding-left: 16px;
 	padding-right: 12px;
@@ -226,14 +228,6 @@ form.navbar-form.navbar-right input.form-control {
 	border-right: 0;
 	color: #FF6600;
 	text-decoration: none;
-}
-
-@media screen and (min-width: 1200px) {
-	.bs-sidenav.affix-bottom,
-	  .bs-sidenav.affix,
-	  .nav.dynamic-scrollspy.affix {
-    width: 165px;
-    }
 }
 
 nav.pagenav,

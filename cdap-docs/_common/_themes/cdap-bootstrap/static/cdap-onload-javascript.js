@@ -1,4 +1,3 @@
-<script type='text/javascript'>
 (function ($) {
     // Determines if an element has scrolled into view
     function elementScrolled(elem) {
@@ -95,4 +94,3 @@
     });
 
 }(window.$jqTheme || window.jQuery));
-</script>
